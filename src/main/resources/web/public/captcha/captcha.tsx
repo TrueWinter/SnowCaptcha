@@ -56,7 +56,7 @@ function render(elem: HTMLElement, responseElem: HTMLInputElement = null) {
 
 	const root = createRoot(elem);
 	roots[elem.dataset.id] = root;
-	root.render(<Root setResponse={setResponse} sitekey={sitekey} callback={callback} host={host.replace(/\/$/, '')} mode={elem.dataset.mode === 'dark' ? 'dark' : 'light'} />);
+	root.render(<Root setResponse={setResponse} sitekey={sitekey} callback={callback} host={host.replace(/\/$/, '')} mode={elem.dataset.mode === 'dark' ? 'dark' : 'light'} assetRoot={getAssetRoot(scriptSrc.href)} />);
 
 	if (responseElem === null) {
 		const container = document.querySelectorAll('.snowcaptcha')[0].parentElement;

@@ -14,10 +14,11 @@ interface Props {
 	sitekey: string
 	callback: string
 	host: string
-	mode: 'light' | 'dark'
+	mode: 'light' | 'dark',
+	assetRoot: string
 }
 
-export default function Captcha({ setResponse, sitekey, callback, host, mode }: Props) {
+export default function Captcha({ setResponse, sitekey, callback, host, mode, assetRoot }: Props) {
 	const [error, setError] = useState('');
 
 	function doCallback(data: CallbackData) {
@@ -55,7 +56,7 @@ export default function Captcha({ setResponse, sitekey, callback, host, mode }: 
 			</> : <div style={{
 				color: 'red'
 			}}>Sitekey not provided</div>}
-			<LogoAndTerms host={host} />
+			<LogoAndTerms host={host} assetRoot={assetRoot} />
 		</div>
 	)
 }

@@ -3,18 +3,16 @@ import css from './captcha.css';
 
 interface Props {
 	host: string
+	assetRoot: string
 }
 
 // @ts-ignore
-import logoSvg from './captcha.svg';
-// Webpack can create an absolute URL with relative parts (such as https://example.com/build/captcha/../captcha/captcha.svg).
-// To prevent any issues that may cause, the URL is normalized before use.
-const logo = new URL(logoSvg).href;
+import './captcha.svg';
 
-export default function LogoAndTerms({ host }: Props) {
+export default function LogoAndTerms({ host, assetRoot }: Props) {
 	return (
 		<div className={css['logo-and-terms']}>
-			<img className={css.logo} src={logo} loading="lazy" decoding="async" />
+			<img className={css.logo} src={`${assetRoot}/captcha.svg`} loading="lazy" decoding="async" />
 			<div className={css['logo-name']}>SnowCaptcha</div>
 			<a className={css.terms} href={`${host}/privacy`} target="_blank" rel="nofollow">Privacy</a>
 		</div>
