@@ -15,7 +15,7 @@ The user has 5 minutes to solve all challenges, at which point the server will h
 
 ## Requirements
 
-- A web server with the ability to proxy requests to a backend and add headers (Nginx is recommended)
+- A web server with the ability to proxy requests to a backend and add headers (HAProxy is recommended for multi-instance deployments)
 - SSL certificate
 - 512MB memory (recommended) per SnowCaptcha instance
 - Redis
