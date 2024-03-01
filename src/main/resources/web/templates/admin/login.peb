@@ -1,0 +1,14 @@
+{% set nonav = true %}
+{% extends "admin/fragments/page" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+    <div class="login-form">
+        <h1 style="margin-bottom:4px;">Login</h1>
+        <p>SnowCaptcha</p>
+        <hr>
+        {% if error is not empty %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <div id="app"></div>
+    </div>
+{% endblock %}

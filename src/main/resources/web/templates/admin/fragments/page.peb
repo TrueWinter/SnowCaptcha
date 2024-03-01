@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}{% endblock %} - SnowCaptcha</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="/css/style.css" />
+        {% set pageCss = view + ".css" %}
+        {% if assets[pageCss] is not empty %}
+            {% include "admin/fragments/include-css" with {"style": pageCss} %}
+        {% endif %}
+        {% if csrf is not empty %}
+            <meta name="csrf" content="{{ csrf }}" />
+        {% endif %}
+    </head>
+    {# Parse and stringify to remove newlines #}
+    <body {% if data is not empty %}data-app="{{ jsons(jsonp(data)) }}"{% endif %}>
+        {% if nonav is empty %}
+            {% include "admin/fragments/nav" %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+
+        {% include "admin/fragments/include-js" with {"script": "admin/common.js"} %}
+
+        {% set pageApp = view + ".js" %}
+        {% if assets[pageApp] is not empty %}
+            {% include "admin/fragments/include-js" with {"script": pageApp} %}
+        {% endif %}
+
+        {% if scripts is not empty %}
+            {% for script in scripts %}
+                {% include "admin/fragments/include-js" with {"script": script} %}
+            {% endfor %}
+        {% endif %}
+    </body>
+</html>

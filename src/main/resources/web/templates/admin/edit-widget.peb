@@ -1,0 +1,7 @@
+{% extends "admin/fragments/dashboard-page" %}
+{% block title %}Edit Widget{% endblock %}
+{% set data = "
+    {
+        \"widget\": " + widget + "
+    }
+" %}

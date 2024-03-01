@@ -1,0 +1,2 @@
+{% extends "admin/fragments/dashboard-page" %}
+{% block title %}Add Account{% endblock %}

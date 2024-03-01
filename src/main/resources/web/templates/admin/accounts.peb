@@ -1,0 +1,13 @@
+{% extends "admin/fragments/dashboard-page" %}
+{% block title %}Accounts{% endblock %}
+{% set data = "
+    {
+        \"accounts\": " + accounts + "
+    }
+" %}
+{% set addbtn = "
+    {
+        \"href\": \"/admin/accounts/add\",
+        \"name\": \"Add Account\"
+    }
+" %}

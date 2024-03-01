@@ -1,0 +1,11 @@
+<div class="navbar">
+    <li class="navbar-collapse"><a class="button" href="#">&#9776;</a></li>
+    <li class="navbar-item"><a href="/admin/widgets">Widgets</a></li>
+    <!-- For future version with region captchas -->
+    <!--<li class="navbar-item"><a href="/admin/captchas">Captchas</a></li>-->
+    <li class="navbar-item"><a href="/admin/accounts">Accounts</a></li>
+    <div class="navbar-item navbar-right flex">
+        <li class="navbar-item"><a href="/admin/accounts/{{ username }}/edit">My Account</a></li>
+        <li class="navbar-item"><a href="/logout">Logout</a></li>
+    </div>
+</div>

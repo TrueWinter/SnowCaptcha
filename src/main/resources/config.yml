@@ -1,0 +1,40 @@
+http:
+  port: 8050
+  secret: alongrandomvalue
+  # Leave blank to show the built-in privacy policy
+  privacy_redirect: ''
+  ip:
+    read_from_header: true
+    header_name: X-Forwarded-For
+
+redis:
+  host: localhost
+  port: 6379
+  user: default
+  password: redis
+
+mysql:
+  host: localhost
+  port: 3306
+  database: snowcaptcha
+  user: snowcaptcha
+  password: snowcaptcha
+
+reputation:
+  project_honey_pot:
+    enabled: false
+    # Replace this with your own API key before enabling
+    api_key: abcdefghijkl
+    resolvers:
+      - 8.8.8.8
+      - 8.8.4.4
+  bgp_tools:
+    # Changes to the blacklist and whitelist may take two hours to apply
+    # ASNs which should always receive a visual captcha
+    blacklist:
+      - AS15169
+      - AS200101
+    # ASNs which should report a good reputation to the ReputationTester
+    # Note that other reputation sources could still report a bad reputation resulting in a visual captcha
+    whitelist:
+      - AS211869

@@ -1,0 +1,8 @@
+{% if script is not empty %}
+    {% if assets[script] is empty %}
+        <script>console.warn('No build file found for {{ script }}, using dev asset');</script>
+        <script src="/{{ script }}"></script>
+    {% else %}
+        <script src="/build/{{ assets[script] }}"></script>
+    {% endif %}
+{% endif %}

@@ -1,0 +1,13 @@
+{% extends "admin/fragments/dashboard-page" %}
+{% block title %}Widgets{% endblock %}
+{% set data = "
+    {
+        \"widgets\": " + widgets + "
+    }
+" %}
+{% set addbtn = "
+    {
+        \"href\": \"/admin/widgets/add\",
+        \"name\": \"Add Widget\"
+    }
+" %}

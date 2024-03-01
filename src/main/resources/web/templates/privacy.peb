@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SnowCaptcha Privacy</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <style>
+            html, body {
+                box-sizing: border-box;
+            }
+
+            .heading {
+                display: flex;
+                gap: 16px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="heading">
+            <img src="/build/captcha/captcha.svg" style="width: 50px;" />
+            <h1>SnowCaptcha Privacy</h1>
+        </div>
+
+        <p>SnowCaptcha is designed to collect and process as little data as possible while still achieving its goal of
+        stopping bots. This page outlines what data SnowCaptcha collects, processes, and shares with third-parties.</p>
+
+        <h2>Data Usage</h2>
+        <p>SnowCaptcha collects your IP address and stores a hash of the prefix (/24 for IPv4, /48 for IPv6) for 10 minutes.</p>
+        <p>Your IP address may also be sent to <a href="https://www.projecthoneypot.org/" rel="nofollow" target="_blank">Project Honey Pot</a>
+        to check if bot behavior was detected from your IP address recently.</p>
+    </body>
+</html>

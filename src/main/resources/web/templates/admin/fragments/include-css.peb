@@ -1,0 +1,8 @@
+{% if style is not empty %}
+    {% if assets[style] is empty %}
+        <script>console.warn('No build file found for {{ style }}, using dev asset');</script>
+        <link rel="stylesheet" href="/{{ style }}" />
+    {% else %}
+        <link rel="stylesheet" href="/build/{{ assets[style] }}" />
+    {% endif %}
+{% endif %}

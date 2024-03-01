@@ -1,0 +1,173 @@
+:root {
+    --main-bg-color: #333;
+    --main-text-color: white;
+    --secondary-bg-color: #1a2c42;
+    --link-color: #20bf20;
+    --success-color: #20bf20;
+    --warn-color: #f98181;
+    --error-color: #f98181;
+}
+
+body {
+    background-color: var(--main-bg-color);
+    color: var(--main-text-color);
+	font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+html, body * {
+	box-sizing: border-box;
+}
+
+#app {
+	overflow-x: auto;
+}
+
+.login-form {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.login-form > * {
+    display: flex;
+    align-self: center;
+}
+
+.login-form > hr {
+    width: 50%;
+}
+
+form {
+	display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.success {
+    color: var(--success-color);
+}
+
+.warn {
+    color: var(--warn-color);
+}
+
+.error {
+    color: var(--error-color);
+}
+
+.navbar {
+    list-style: none;
+    display: flex;
+    gap: 16px;
+    background-color: var(--secondary-bg-color);
+    padding: 12px;
+}
+
+.navbar-item {
+    gap: 16px;
+}
+
+a {
+    color: var(--link-color);
+}
+
+.navbar-right {
+    margin-left:auto;
+}
+
+body {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.button {
+    background-color: var(--secondary-bg-color);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.warn-button {
+    border: 0;
+    cursor: pointer;
+    padding: 6px !important;
+    background-color: var(--warn-color) !important;
+}
+
+.inline-button-right {
+    align-self: center;
+    margin-left: auto;
+    margin-right: 16px;
+}
+
+.flex {
+    display: flex;
+}
+
+h1, .main, .content, #app, .error, .success {
+    margin-left: 32px;
+    margin-right: 32px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.gap-8 {
+    gap: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+th, td {
+    border: 1px solid grey;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.navbar-collapse {
+    right: 0;
+    display: none;
+    position: absolute;
+    margin-right: 12px;
+}
+
+.navbar-collapse .button {
+    background-color: var(--main-bg-color);
+    text-decoration: none;
+}
+
+.navbar-hidden {
+    display: none !important;
+}
+
+.navbar-shown {
+    display: inherit !important;
+}
+
+@media only screen and (max-width: 600px) {
+    .navbar {
+        flex-direction: column;
+    }
+
+    .navbar .navbar-right {
+        flex-direction: column;
+        margin-left: unset;
+    }
+
+    .navbar-item {
+        display: none;
+    }
+
+    .navbar-collapse {
+        display: inline-block;
+    }
+}
+
+.table {
+	max-width: 100%;
+	overflow-x: auto;
+}

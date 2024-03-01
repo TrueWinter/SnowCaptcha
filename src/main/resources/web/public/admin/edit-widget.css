@@ -1,0 +1,10 @@
+.example {
+	max-width: 100%;
+	overflow-wrap: normal;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	background-color: #222;
+	padding: 16px;
+	border-radius: 4px;
+	color: white;
+}

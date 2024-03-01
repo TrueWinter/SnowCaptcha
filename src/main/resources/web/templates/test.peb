@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <style>
+            html, body {
+                box-sizing: border-box;
+                background-color: #222;
+                color: #eee;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>SnowCaptcha Test</h1>
+        <div>
+            <div class="snowcaptcha" data-mode="dark"></div>
+        </div>
+
+        <script>
+            window.captchaCallback = function(data) {
+                console.log('callback', data);
+
+                /*
+                    IMPORTANT! Do not validate the token client-side in production.
+                    It is being done like this here for testing purposes.
+                */
+                if (data === 'SOLVED') {
+                    fetch(`/validate-token`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            token: document.querySelector('[name="snowcaptcha"]').value,
+                            sitekey: '{{ sitekey }}',
+                            secretkey: '{{ secretkey }}'
+                        })
+                    }).then(e => e.json()).then(console.log);
+                }
+            }
+        </script>
+
+        <script
+            {% if src is not empty %}
+                src="{{ src }}"
+            {% else %}
+                src="/build/captcha/captcha.js"
+            {% endif %}
+            data-sitekey="{{ sitekey }}" data-callback="captchaCallback"
+            {% if host is not empty %}data-host="{{ host }}"{% endif %} async></script>
+    </body>
+</html>

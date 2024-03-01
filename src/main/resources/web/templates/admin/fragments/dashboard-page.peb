@@ -1,0 +1,21 @@
+{% extends "admin/fragments/page" %}
+{% block content %}
+    {% if addbtn is not empty %}
+        {% set btn = jsonp(addbtn) %}
+        <div class="flex">
+            <h1>{% block title %}{% endblock %}</h1>
+            <a class="button inline-button-right" href="{{ btn.href }}">{{ btn.name }}</a>
+        </div>
+    {% else %}
+        <h1>{% block title %}{% endblock %}</h1>
+    {% endif %}
+
+    <hr>
+    {% if error is not empty %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    {% if success is not empty %}
+        <div class="success">{{ success }}</div>
+    {% endif %}
+    <div id="app"></div>
+{% endblock %}
