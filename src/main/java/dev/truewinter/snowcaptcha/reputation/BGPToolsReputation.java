@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Checks if the IP address belongs to an ASN hosting servers, VPNs, Tor infrastructure, or is an
@@ -70,28 +73,8 @@ public class BGPToolsReputation implements ReputationSource {
              */
             redisBGPToolsReputationDatabase.updateExpiry();
 
-            // Format: 2a0e:8f02:2151::/48 211869
-            List<String> table = new ArrayList<>();
-            // Format: AS211869
             List<String> badASNs = new ArrayList<>();
-            List<String> badPrefixes = new ArrayList<>();
-
             try {
-                String h = get("https://bgp.tools/table.jsonl");
-                // Format: {"CIDR":"2a0e:8f02:2151::/48","ASN":211869,"Hits":2235}
-                String[] lines = h.split("\n");
-
-                for (String line : lines) {
-                    JsonNode jsonNode = new ObjectMapper().readTree(line);
-                    String prefix = jsonNode.get("CIDR").textValue();
-                    int asn = jsonNode.get("ASN").intValue();
-                    int hits = jsonNode.get("Hits").asInt();
-
-                    if (hits >= 100) {
-                        table.add(prefix + " " + asn);
-                    }
-                }
-
                 for (String category : categories) {
                     String c = get("https://bgp.tools/tags/" + category + ".txt");
                     badASNs.addAll(Arrays.asList(c.split("\n")));
@@ -100,15 +83,21 @@ public class BGPToolsReputation implements ReputationSource {
                 badASNs.addAll(bgpToolsConfig.getBlacklist());
                 badASNs.removeAll(bgpToolsConfig.getWhitelist());
 
-                for (String s : table) {
-                    String[] parts = s.split(" ");
-                    String prefix = parts[0];
-                    String asn = parts[1];
+                List<String> badPrefixes = get("https://bgp.tools/table.jsonl", l -> {
+                    try {
+                        JsonNode jsonNode = new ObjectMapper().readTree(l);
+                        String prefix = jsonNode.get("CIDR").textValue();
+                        int asn = jsonNode.get("ASN").intValue();
+                        int hits = jsonNode.get("Hits").asInt();
 
-                    if (badASNs.contains("AS" + asn)) {
-                        badPrefixes.add(prefix);
-                    }
-                }
+                        if (badASNs.contains("AS" + asn) && hits >= 100) {
+                            return prefix;
+                        }
+                        // This function is essentially a loop, no need to have the catch block run every time
+                    } catch (JsonProcessingException ignored) {}
+
+                    return null;
+                });
 
                 redisBGPToolsReputationDatabase.setData(badPrefixes);
             } catch (IOException e) {
@@ -116,7 +105,7 @@ public class BGPToolsReputation implements ReputationSource {
             }
         }
 
-        private String get(String url) throws IOException {
+        private List<String> get(String url, Function<String, String> function) throws IOException {
             URL url1 = new URL(url);
             HttpURLConnection con = (HttpURLConnection) url1.openConnection();
             con.setRequestMethod("GET");
@@ -131,15 +120,21 @@ public class BGPToolsReputation implements ReputationSource {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(con.getInputStream()));
             String inputLine;
-            StringBuilder content = new StringBuilder();
+            List<String> output = new ArrayList<>();
             while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-                content.append("\n");
+                String o = function.apply(inputLine);
+                if (o != null) {
+                    output.add(o);
+                }
             }
             in.close();
             con.disconnect();
 
-            return content.toString();
+            return output;
+        }
+
+        private String get(String url) throws IOException {
+            return String.join("\n", get(url, c -> c));
         }
     }
 

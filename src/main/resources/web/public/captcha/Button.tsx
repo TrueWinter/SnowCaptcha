@@ -2,7 +2,7 @@
 import css from './captcha.css';
 
 import { CallbackData, Status } from './Root';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { pow } from './util';
 import VisualCaptcha, { TextVisualChallenge } from './VisualCaptcha';
 import { FloatingArrow, FloatingFocusManager, arrow, autoUpdate, offset, useClick, useDismiss, useFloating, useInteractions, useRole } from '@floating-ui/react';

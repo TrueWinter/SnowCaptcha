@@ -17,7 +17,8 @@ The user has 5 minutes to solve all challenges, at which point the server will h
 
 - A web server with the ability to proxy requests to a backend and add headers (HAProxy is recommended for multi-instance deployments)
 - SSL certificate
-- 512MB memory (recommended) per SnowCaptcha instance
+- 1GB memory (minimum)
+  - It is recommended to allocate 384MB memory per SnowCaptcha instance, plus extra for OS and database use
 - Redis
 - MySQL
 - Linux server (recommended)
@@ -27,13 +28,13 @@ It has been tested on modern versions of Firefox, Chrome, and Safari.
 
 ## Usage
 
-After starting SnowCaptcha for the first time, a configuration file will be created. Modify this as needed and then start SnowCaptcha again. The recommended JVM flags are `-XX:+UseG1GC -Xmx512M` (adjust memory as needed).
+After starting SnowCaptcha for the first time, a configuration file will be created. Modify this as needed and then start SnowCaptcha again. The recommended JVM flags are `-XX:+UseG1GC -Xms384M -Xmx384M` (adjust memory as needed).
 
-Configure your web server to terminate SSL and proxy requests to SnowCaptcha. You will need to set up a header that contains the user's IP address, and configure this in the SnowCaptcha config file.
+Configure your web server to terminate SSL and proxy requests to SnowCaptcha. You will need to set up a header that contains the user's IP address (ensuring that the header contains only the IP address, and that IPv4 addresses are not in the IPv4-mapped IPv6 address format), and configure this header in the SnowCaptcha config file.
 
 Then, log in to the SnowCaptcha dashboard using the username `admin` and password `snowcaptcha`. It is recommended to change the password as soon as possible. Add a widget, taking note of the site key and secret key (which will only be shown once).
 
-SnowCaptcha is designed to support multiple instances connected to the same Redis and MySQL database. It is recommended to run at least two instances for redundancy and to allow for zero-downtime updates. You should ensure that your load balancer only considers an instance down if it receives a 5xx error or the connection times out.
+SnowCaptcha is designed to support multiple instances connected to the same Redis and MySQL database. It is recommended to run at least two instances for redundancy and to allow for zero-downtime updates. You should ensure that your load balancer only considers an instance down if it receives a non-200 response from the `/health` endpoint or the connection times out.
 
 Implementing a widget on your website is easy:
 ```html
