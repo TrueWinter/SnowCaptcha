@@ -94,8 +94,10 @@
 .visual {
 	display: flex;
 	flex-direction: column;
-	width: 300px;
+	width: fit-content;
+	min-width: 300px;
 	background-color: #f0f0f0;
+	border: 1px solid #bbb;
 	color: black;
 	padding: 12px;
 	border-radius: 8px;
@@ -168,6 +170,7 @@
 .root[data-mode="dark"] .logo-name, .root[data-mode="dark"] .terms, .root[data-mode="dark"] .robot,
 .root[data-mode="dark"] .visual {
 	color: #ddd !important;
+	border: 1px solid #555;
 }
 
 .root[data-mode="dark"] .arrow {
