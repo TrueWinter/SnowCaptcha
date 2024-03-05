@@ -46,7 +46,7 @@
 	border-radius: 50%;
 	margin-left: 10px;
 	margin-right: 2px;
-	box-sizing: border-box;
+	box-sizing: border-box !important;
 	animation: spinnerRotation 1s linear infinite;
 }
 
@@ -156,8 +156,8 @@
 }
 
 .root, .root * {
-	box-sizing: content-box !important;
-	line-height: normal !important;
+	box-sizing: content-box;
+	line-height: normal;
 }
 
 .root[data-mode="dark"] {
