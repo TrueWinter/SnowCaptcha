@@ -170,7 +170,6 @@
 .root[data-mode="dark"] .logo-name, .root[data-mode="dark"] .terms, .root[data-mode="dark"] .robot,
 .root[data-mode="dark"] .visual {
 	color: #ddd !important;
-	border: 1px solid #555;
 }
 
 .root[data-mode="dark"] .arrow {
@@ -179,6 +178,7 @@
 
 .root[data-mode="dark"] .visual {
 	background-color: #333 !important;
+	border: 1px solid #555;
 }
 
 .root[data-mode="dark"] .refresh svg path {
