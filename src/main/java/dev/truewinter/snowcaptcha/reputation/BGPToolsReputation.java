@@ -54,10 +54,9 @@ public class BGPToolsReputation implements ReputationSource {
         @Override
         public void run() {
             try {
-                if (!redisBGPToolsReputationDatabase.isDataExpired() &&
-                        redisBGPToolsReputationDatabase.getData().isPresent()) return;
-
-                if (redisBGPToolsReputationDatabase.getData().isEmpty()) {
+                Optional<List<String>> data = redisBGPToolsReputationDatabase.getData();
+                if (!redisBGPToolsReputationDatabase.isDataExpired() && data.isPresent()) return;
+                if (data.isEmpty()) {
                     redisBGPToolsReputationDatabase.setData(new ArrayList<>());
                 }
             } catch (JsonProcessingException e) {
@@ -76,14 +75,14 @@ public class BGPToolsReputation implements ReputationSource {
             List<String> badASNs = new ArrayList<>();
             try {
                 for (String category : categories) {
-                    String c = get("https://bgp.tools/tags/" + category + ".txt");
+                    String c = get(bgpToolsConfig.getApi() + "/tags/" + category + ".txt");
                     badASNs.addAll(Arrays.asList(c.split("\n")));
                 }
 
                 badASNs.addAll(bgpToolsConfig.getBlacklist());
                 badASNs.removeAll(bgpToolsConfig.getWhitelist());
 
-                List<String> badPrefixes = get("https://bgp.tools/table.jsonl", l -> {
+                List<String> badPrefixes = get(bgpToolsConfig.getApi() + "/table.jsonl", l -> {
                     try {
                         JsonNode jsonNode = new ObjectMapper().readTree(l);
                         String prefix = jsonNode.get("CIDR").textValue();
@@ -117,19 +116,19 @@ public class BGPToolsReputation implements ReputationSource {
             int status = con.getResponseCode();
             if (status >= 400) throw new IOException("Received error " + status + " from BGP.tools");
 
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(con.getInputStream()));
-            String inputLine;
             List<String> output = new ArrayList<>();
-            while ((inputLine = in.readLine()) != null) {
-                String o = function.apply(inputLine);
-                if (o != null) {
-                    output.add(o);
+            try (BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()))) {
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    String o = function.apply(inputLine);
+                    if (o != null) {
+                        output.add(o);
+                    }
                 }
             }
-            in.close();
-            con.disconnect();
 
+            con.disconnect();
             return output;
         }
 

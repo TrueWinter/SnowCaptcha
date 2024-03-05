@@ -155,6 +155,11 @@
 	font-family: sans-serif;
 }
 
+.root, .root * {
+	box-sizing: content-box !important;
+	line-height: normal !important;
+}
+
 .root[data-mode="dark"] {
 	background-color: #222;
 	border: 1px solid #555;

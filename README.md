@@ -17,8 +17,8 @@ The user has 5 minutes to solve all challenges, at which point the server will h
 
 - A web server with the ability to proxy requests to a backend and add headers (HAProxy is recommended for multi-instance deployments)
 - SSL certificate
-- 1GB memory (minimum)
-  - It is recommended to allocate 384MB memory per SnowCaptcha instance, plus extra for OS and database use
+- 1GB memory minimum, 2GB recommended
+  - It is recommended to allocate 256MB memory per SnowCaptcha instance, plus extra for Java off-heap, OS, and database use
 - Redis
 - MySQL
 - Linux server (recommended)
