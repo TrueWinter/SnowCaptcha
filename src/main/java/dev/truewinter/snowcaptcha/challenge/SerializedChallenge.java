@@ -16,8 +16,8 @@ public class SerializedChallenge {
     )
     @JsonSubTypes({
             @JsonSubTypes.Type(value = ProofOfWorkChallenge.class, name = Challenge.PROOF_OF_WORK),
-            //@JsonSubTypes.Type(value = RegionVisualChallenge.class, name = "REGION"),
-            @JsonSubTypes.Type(value = TextVisualChallenge.class, name = "TEXT")
+            @JsonSubTypes.Type(value = RegionVisualChallenge.class, name = Challenge.REGION),
+            @JsonSubTypes.Type(value = TextVisualChallenge.class, name = Challenge.TEXT)
     })
     private Challenge challenge;
 

@@ -13,6 +13,8 @@ public class Config {
     private final RedisConfig redisConfig;
     private final MysqlConfig mysqlConfig;
     private final ReputationConfig reputationConfig;
+    private final S3Config s3Config;
+    private final VisualChallengeConfig visualChallengeConfig;
     private final boolean debugLoggerEnabled;
     private final DevModeConfig devModeConfig;
 
@@ -31,6 +33,10 @@ public class Config {
         this.redisConfig = new RedisConfig(yamlDocument.getSection("redis"));
         this.mysqlConfig = new MysqlConfig(yamlDocument.getSection("mysql"));
         this.reputationConfig = new ReputationConfig(yamlDocument.getSection("reputation"));
+        this.s3Config = yamlDocument.contains("s3") ?
+                new S3Config(yamlDocument.getSection("s3")) : new S3Config();
+        this.visualChallengeConfig = yamlDocument.contains("visual_challenge") ?
+                new VisualChallengeConfig(yamlDocument.getSection("visual_challenge")) : new VisualChallengeConfig();
         this.debugLoggerEnabled = yamlDocument.getBoolean("debug_logger_enabled", false);
 
         if (yamlDocument.contains("dev_mode")) {
@@ -54,6 +60,14 @@ public class Config {
 
     public ReputationConfig getReputationConfig() {
         return reputationConfig;
+    }
+
+    public S3Config getS3Config() {
+        return s3Config;
+    }
+
+    public VisualChallengeConfig getVisualChallengeConfig() {
+        return visualChallengeConfig;
     }
 
     public boolean isDebugLoggerEnabled() {

@@ -4,6 +4,7 @@ import dev.truewinter.snowcaptcha.config.Config;
 import dev.truewinter.snowcaptcha.config.ReputationConfig;
 import dev.truewinter.snowcaptcha.database.Mysql;
 import dev.truewinter.snowcaptcha.database.Redis;
+import dev.truewinter.snowcaptcha.storage.S3Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ public class SnowCaptcha {
     private static DebugLogger debugLogger;
     private static Redis redis;
     private static Mysql mysql;
+    private static S3Storage s3;
     private static Config config = null;
 
     public static void main(String[] args) {
@@ -28,6 +30,12 @@ public class SnowCaptcha {
 
         debugLogger = new DebugLogger(logger, config.isDebugLoggerEnabled());
 
+        if (config.getS3Config().isConfigured()) {
+            s3 = new S3Storage(config.getS3Config());
+        } else if (config.getVisualChallengeConfig().isRegionEnabled()) {
+            logger.warn("Region challenges are enabled but S3 is not configured, falling back to text challenges");
+        }
+
         redis = new Redis(config.getRedisConfig());
         mysql = new Mysql(config.getMysqlConfig());
 
@@ -37,6 +45,9 @@ public class SnowCaptcha {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             webServer.shutdown();
             mysql.close();
+            if (s3 != null) {
+                s3.close();
+            }
         }));
     }
 
@@ -54,6 +65,14 @@ public class SnowCaptcha {
 
     public static Mysql getMysql() {
         return mysql;
+    }
+
+    public static S3Storage getS3() {
+        return s3;
+    }
+
+    public static Config getConfig() {
+        return config;
     }
 
     public static ReputationConfig getReputationConfig() {

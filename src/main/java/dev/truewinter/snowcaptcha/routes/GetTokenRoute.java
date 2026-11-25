@@ -5,6 +5,7 @@ import dev.truewinter.snowcaptcha.Util;
 import dev.truewinter.snowcaptcha.admin.Widget;
 import dev.truewinter.snowcaptcha.challenge.Challenge;
 import dev.truewinter.snowcaptcha.challenge.ProofOfWorkChallenge;
+import dev.truewinter.snowcaptcha.challenge.RegionVisualChallenge;
 import dev.truewinter.snowcaptcha.challenge.SerializedChallenge;
 import dev.truewinter.snowcaptcha.challenge.TextVisualChallenge;
 import dev.truewinter.snowcaptcha.config.DevModeConfig;
@@ -75,13 +76,12 @@ public class GetTokenRoute {
                 if (challenge != null) {
                     if (!answer.getChallenge().isValid(answer)) {
                         try {
-                            challenges.put(Util.generateRandomString(32), new SerializedChallenge(
-                                    challenge.getType(), answer.getChallenge().recreate()
-                            ));
+                            challenges.put(Util.generateRandomString(32),
+                                    recreateSerializedChallenge(challenge));
 
                             tokenData.remove(key);
                         } catch (Exception e) {
-                            SnowCaptcha.getLogger().error("Failed to recreate challange", e);
+                            SnowCaptcha.getLogger().error("Failed to recreate challenge", e);
                         }
                     } else {
                         tokenData.remove(key);
@@ -95,8 +95,7 @@ public class GetTokenRoute {
             SnowCaptcha.getDebugLogger().getLogger().info("Received new request from " + Util.sha2Hash(ip.toString()));
 
             if (ReputationTester.getInstance().hasBadReputation(ip)) {
-                challenges.put(Util.generateRandomString(32),
-                        new SerializedChallenge(Challenge.TEXT, TextVisualChallenge.create()));
+                challenges.put(Util.generateRandomString(32), createVisualChallenge());
             }
 
             challenges.put(Util.generateRandomString(32), new SerializedChallenge(
@@ -121,5 +120,34 @@ public class GetTokenRoute {
         }
 
         ctx.json(tokenResponse);
+    }
+
+    private static SerializedChallenge createVisualChallenge() throws Exception {
+        if (SnowCaptcha.getConfig().getVisualChallengeConfig().isRegionEnabled()) {
+            try {
+                return new SerializedChallenge(Challenge.REGION, RegionVisualChallenge.create());
+            } catch (Exception e) {
+                SnowCaptcha.getLogger().warn("Failed to create region challenge, falling back to text challenge", e);
+            }
+        }
+
+        return new SerializedChallenge(Challenge.TEXT, TextVisualChallenge.create());
+    }
+
+    private static SerializedChallenge recreateSerializedChallenge(SerializedChallenge challenge) throws Exception {
+        if (Challenge.REGION.equals(challenge.getType())) {
+            try {
+                return new SerializedChallenge(Challenge.REGION, RegionVisualChallenge.create());
+            } catch (Exception e) {
+                SnowCaptcha.getLogger().warn("Failed to recreate region challenge, falling back to text challenge", e);
+                return new SerializedChallenge(Challenge.TEXT, TextVisualChallenge.create());
+            }
+        }
+
+        if (Challenge.TEXT.equals(challenge.getType())) {
+            return new SerializedChallenge(Challenge.TEXT, challenge.getChallenge().recreate());
+        }
+
+        return new SerializedChallenge(challenge.getType(), challenge.getChallenge().recreate());
     }
 }

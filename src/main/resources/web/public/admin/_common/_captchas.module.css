@@ -1,0 +1,48 @@
+.selector {
+	margin: 8px 0;
+	max-width: 100%;
+}
+
+.imageContainer {
+	position: relative;
+	display: inline-block;
+	max-width: 100%;
+	line-height: 0;
+}
+
+.image {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	max-height: 600px;
+	user-select: none;
+	touch-action: none;
+	cursor: crosshair;
+	background-color: #222;
+}
+
+.selection {
+	position: absolute;
+	border: 2px solid #20bf20;
+	background-color: rgba(32, 191, 32, 0.25);
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.hint {
+	color: #bbb;
+	font-size: 0.9em;
+	margin-bottom: 6px;
+}
+
+.thumbnail {
+	max-width: 160px;
+	max-height: 100px;
+	object-fit: contain;
+}
+
+.actions {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+}

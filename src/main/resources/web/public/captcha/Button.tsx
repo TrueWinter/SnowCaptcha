@@ -4,7 +4,7 @@ import css from './captcha.css';
 import { CallbackData, Status } from './Root';
 import { useEffect, useRef, useState } from 'react';
 import { pow } from './util';
-import VisualCaptcha, { TextVisualChallenge } from './VisualCaptcha';
+import VisualCaptcha, { VisualChallenge } from './VisualCaptcha';
 import { FloatingArrow, FloatingFocusManager, arrow, autoUpdate, offset, useClick, useDismiss, useFloating, useInteractions, useRole } from '@floating-ui/react';
 import { flip, shift } from '@floating-ui/core';
 
@@ -34,7 +34,7 @@ export default function Button({ setResponse, sitekey, callback, host, setError 
 	const buttonRef = useRef<HTMLDivElement>(null);
 	const timer = useRef<NodeJS.Timeout | null>(null);
 	const [isVisualCaptchaShown, setIsVisualCaptchaShown] = useState(false);
-	const [visualChallenge, setVisualChallenge] = useState<TextVisualChallenge>();
+	const [visualChallenge, setVisualChallenge] = useState<VisualChallenge>();
 	const tokenRef = useRef(null);
 	const arrowRef = useRef(null);
 	const solvedChallenges = useRef({});
@@ -121,10 +121,20 @@ export default function Button({ setResponse, sitekey, callback, host, setError 
 				case 'TEXT':
 					setVisualChallenge({
 						token: ch,
+						type: 'TEXT',
 						...c.challenge
 					});
 					setIsVisualCaptchaShown(true);
 					// The spinner can be a bit distracting when completing a visual captcha
+					setStatus('UNSOLVED');
+					break;
+				case 'REGION':
+					setVisualChallenge({
+						token: ch,
+						type: 'REGION',
+						...c.challenge
+					});
+					setIsVisualCaptchaShown(true);
 					setStatus('UNSOLVED');
 					break;
 			}

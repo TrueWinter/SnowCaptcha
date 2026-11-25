@@ -20,6 +20,25 @@ mysql:
   user: snowcaptcha
   password: snowcaptcha
 
+s3:
+  # Used to store region challenge images. Required when visual_challenge.region is enabled.
+  # The endpoint must be reachable by end users as challenge images are served with presigned URLs.
+  endpoint: ''
+  region: us-east-1
+  bucket: ''
+  access_key: ''
+  secret_key: ''
+  # Enable this for most S3-compatible providers (MinIO, Ceph, etc.)
+  path_style_access: true
+  key_prefix: 'region-challenges/'
+
+visual_challenge:
+  region:
+    # When enabled, users who need a visual challenge will be asked to click part of an image
+    # instead of typing a randomly generated string. Falls back to the text challenge if no
+    # region challenges are available.
+    enabled: false
+
 reputation:
   project_honey_pot:
     enabled: false
