@@ -16,14 +16,12 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 final class RegionChallengeUtil {
     private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;
     private static final int MAX_IMAGE_DIMENSION = 10_000;
     private static final long MAX_IMAGE_PIXELS = 20_000_000;
-    private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/jpg", "image/png");
 
     record FormData(String instructions, double x, double y, double width, double height) {}
 
@@ -84,11 +82,6 @@ final class RegionChallengeUtil {
             throw new IllegalArgumentException("Image must be 5MB or smaller");
         }
 
-        String contentType = normalizeContentType(file.contentType(), file.filename());
-        if (contentType == null) {
-            throw new IllegalArgumentException("Image must be a JPEG or PNG");
-        }
-
         byte[] bytes;
         try (InputStream inputStream = file.content()) {
             bytes = inputStream.readAllBytes();
@@ -102,7 +95,7 @@ final class RegionChallengeUtil {
             throw new IllegalArgumentException("Image must be 5MB or smaller");
         }
 
-        validateImage(bytes);
+        String contentType = validateImage(bytes);
 
         S3Storage s3 = SnowCaptcha.getS3();
         if (s3 == null) {
@@ -121,7 +114,7 @@ final class RegionChallengeUtil {
         return new UploadedImage(objectKey, contentType);
     }
 
-    private static void validateImage(byte[] bytes) {
+    private static String validateImage(byte[] bytes) {
         try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
             if (input == null) {
                 throw new IllegalArgumentException("Image could not be read");
@@ -136,6 +129,16 @@ final class RegionChallengeUtil {
             try {
                 reader.setInput(input, true, true);
 
+                String format = reader.getFormatName().toLowerCase();
+                String contentType;
+                if (format.equals("jpeg") || format.equals("jpg")) {
+                    contentType = "image/jpeg";
+                } else if (format.equals("png")) {
+                    contentType = "image/png";
+                } else {
+                    throw new IllegalArgumentException("Image must be a JPEG or PNG");
+                }
+
                 int width = reader.getWidth(0);
                 int height = reader.getHeight(0);
                 if (width <= 0 || height <= 0 || width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION ||
@@ -146,6 +149,8 @@ final class RegionChallengeUtil {
                 if (reader.read(0) == null) {
                     throw new IllegalArgumentException("Image could not be read");
                 }
+
+                return contentType;
             } finally {
                 reader.dispose();
             }
@@ -154,22 +159,6 @@ final class RegionChallengeUtil {
         } catch (Exception e) {
             throw new IllegalArgumentException("Image could not be read");
         }
-    }
-
-    private static String normalizeContentType(String contentType, String filename) {
-        if (contentType != null) {
-            String normalized = contentType.toLowerCase();
-            if (normalized.equals("image/jpg")) return "image/jpeg";
-            if (ALLOWED_TYPES.contains(normalized)) return normalized;
-        }
-
-        if (filename != null) {
-            String lower = filename.toLowerCase();
-            if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-            if (lower.endsWith(".png")) return "image/png";
-        }
-
-        return null;
     }
 
     static Map<String, Object> toViewModel(RegionChallenge challenge) {
@@ -196,6 +185,24 @@ final class RegionChallengeUtil {
         } catch (Exception e) {
             SnowCaptcha.getLogger().warn("Failed to generate region challenge image URL", e);
             return "";
+        }
+    }
+
+    static void cleanupUploadedImage(String objectKey, boolean writeAttempted) {
+        if (objectKey == null) return;
+
+        if (!writeAttempted) {
+            deleteImageQuietly(objectKey);
+            return;
+        }
+
+        try {
+            if (!SnowCaptcha.getMysql().getMysqlRegionChallengeDatabase().isObjectKeyReferenced(objectKey)) {
+                deleteImageQuietly(objectKey);
+            }
+        } catch (Exception e) {
+            SnowCaptcha.getLogger().warn(
+                    "Failed to check whether an uploaded region challenge image is referenced, leaving it in S3", e);
         }
     }
 

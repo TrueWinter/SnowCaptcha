@@ -1,6 +1,6 @@
 // @ts-ignore
 import css from './captcha.css'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Props {
 	challenge: VisualChallenge
@@ -33,6 +33,9 @@ export default function VisualCaptcha({
 }: Props) {
 	const formRef = useRef<HTMLFormElement>();
 	const refreshRef = useRef<HTMLButtonElement>();
+	const imageRef = useRef<HTMLImageElement>();
+	const [keyboardPosition, setKeyboardPosition] = useState({ x: 0.5, y: 0.5 });
+	const [keyboardActive, setKeyboardActive] = useState(false);
 
 	function validateAnswer(e: Event) {
 		e.preventDefault();
@@ -41,11 +44,51 @@ export default function VisualCaptcha({
 		callback(answerInput.value);
 	}
 
+	function submitPoint(x: number, y: number) {
+		callback(`${x.toFixed(6)},${y.toFixed(6)}`);
+	}
+
 	function handleImageClick(e: React.MouseEvent<HTMLImageElement>) {
 		const bounds = e.currentTarget.getBoundingClientRect();
 		const x = clamp((e.clientX - bounds.left) / bounds.width);
 		const y = clamp((e.clientY - bounds.top) / bounds.height);
-		callback(`${x.toFixed(6)},${y.toFixed(6)}`);
+		submitPoint(x, y);
+	}
+
+	function handleImageKeyDown(e: React.KeyboardEvent<HTMLImageElement>) {
+		if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+			e.preventDefault();
+			submitPoint(keyboardPosition.x, keyboardPosition.y);
+			return;
+		}
+
+		const step = e.shiftKey ? 0.005 : 0.02;
+		let dx = 0;
+		let dy = 0;
+
+		switch (e.key) {
+			case 'ArrowLeft':
+				dx = -step;
+				break;
+			case 'ArrowRight':
+				dx = step;
+				break;
+			case 'ArrowUp':
+				dy = -step;
+				break;
+			case 'ArrowDown':
+				dy = step;
+				break;
+			default:
+				return;
+		}
+
+		e.preventDefault();
+		setKeyboardActive(true);
+		setKeyboardPosition(position => ({
+			x: clamp(position.x + dx),
+			y: clamp(position.y + dy)
+		}));
 	}
 
 	function refresh() {
@@ -59,6 +102,16 @@ export default function VisualCaptcha({
 		(e.target as HTMLDivElement).blur();
 		refresh();
 	}
+
+	useEffect(() => {
+		if (challenge.type !== 'REGION') return;
+
+		setKeyboardPosition({ x: 0.5, y: 0.5 });
+		setKeyboardActive(false);
+
+		const frame = requestAnimationFrame(() => imageRef.current?.focus());
+		return () => cancelAnimationFrame(frame);
+	}, [challenge.token]);
 
 	useEffect(() => {
 		if (formRef.current) {
@@ -89,7 +142,29 @@ export default function VisualCaptcha({
 					<img src={`data:image/jpeg;base64,${challenge.img}`} />
 				</div> :
 				<div className={css.regionImage}>
-					<img src={challenge.img} draggable={false} onClick={handleImageClick} />
+					<img
+						ref={imageRef}
+						src={challenge.img}
+						draggable={false}
+						tabIndex={0}
+						role="button"
+						aria-label={challenge.instructions}
+						onClick={handleImageClick}
+						onKeyDown={handleImageKeyDown}
+						onFocus={() => setKeyboardActive(true)}
+						onBlur={() => setKeyboardActive(false)}
+					/>
+					{keyboardActive &&
+						<div className={css.keyboardCursor} style={{
+							left: `${keyboardPosition.x * 100}%`,
+							top: `${keyboardPosition.y * 100}%`
+						}}></div>
+					}
+				</div>
+			}
+			{challenge.type === 'REGION' &&
+				<div className={css.regionHint}>
+					Click the image, or use the arrow keys and press Enter to select.
 				</div>
 			}
 			<form className={css.form} ref={formRef}>

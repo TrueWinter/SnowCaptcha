@@ -11,17 +11,20 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class S3Storage {
     private final S3Config config;
     private final S3Client client;
     private final S3Presigner presigner;
+    private final AtomicBoolean available = new AtomicBoolean(false);
 
     public S3Storage(S3Config config) {
         this.config = config;
@@ -37,10 +40,14 @@ public class S3Storage {
                 .credentialsProvider(credentialsProvider)
                 .serviceConfiguration(serviceConfiguration);
 
+        S3Configuration presignerConfiguration = serviceConfiguration.toBuilder()
+                .checksumValidationEnabled(false)
+                .build();
+
         S3Presigner.Builder presignerBuilder = S3Presigner.builder()
                 .region(Region.of(config.getRegion()))
                 .credentialsProvider(credentialsProvider)
-                .serviceConfiguration(serviceConfiguration);
+                .serviceConfiguration(presignerConfiguration);
 
         if (!Util.isBlank(config.getEndpoint())) {
             URI endpoint = URI.create(config.getEndpoint());
@@ -50,6 +57,24 @@ public class S3Storage {
 
         this.client = clientBuilder.build();
         this.presigner = presignerBuilder.build();
+    }
+
+    public void headObject(String key) {
+        client.headObject(HeadObjectRequest.builder()
+                .bucket(config.getBucket())
+                .key(key)
+                .overrideConfiguration(o -> o
+                        .apiCallTimeout(Duration.ofSeconds(2))
+                        .apiCallAttemptTimeout(Duration.ofSeconds(2)))
+                .build());
+    }
+
+    public boolean isAvailable() {
+        return available.get();
+    }
+
+    public void setAvailable(boolean available) {
+        this.available.set(available);
     }
 
     public void putObject(String key, byte[] data, String contentType) {

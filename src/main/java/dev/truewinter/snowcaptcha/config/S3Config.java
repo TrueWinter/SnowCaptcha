@@ -11,6 +11,7 @@ public class S3Config {
     private final String secretKey;
     private final boolean pathStyleAccess;
     private final String keyPrefix;
+    private final int healthCheckInterval;
 
     public S3Config(Section section) {
         this.endpoint = section.getString("endpoint", "");
@@ -20,6 +21,7 @@ public class S3Config {
         this.secretKey = section.getString("secret_key", "");
         this.pathStyleAccess = section.getBoolean("path_style_access", true);
         this.keyPrefix = section.getString("key_prefix", "region-challenges/");
+        this.healthCheckInterval = section.getInt("health_check_interval", 300);
     }
 
     public S3Config() {
@@ -30,6 +32,7 @@ public class S3Config {
         this.secretKey = "";
         this.pathStyleAccess = true;
         this.keyPrefix = "region-challenges/";
+        this.healthCheckInterval = 300;
     }
 
     public boolean isConfigured() {
@@ -62,5 +65,9 @@ public class S3Config {
 
     public String getKeyPrefix() {
         return keyPrefix;
+    }
+
+    public int getHealthCheckInterval() {
+        return healthCheckInterval;
     }
 }

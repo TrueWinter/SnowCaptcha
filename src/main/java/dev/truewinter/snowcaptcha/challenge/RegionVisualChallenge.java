@@ -39,6 +39,10 @@ public class RegionVisualChallenge extends VisualChallenge {
             throw new IllegalStateException("S3 is not configured");
         }
 
+        if (!s3.isAvailable()) {
+            throw new IllegalStateException("S3 is unavailable");
+        }
+
         RegionChallenge regionChallenge = SnowCaptcha.getMysql().getMysqlRegionChallengeDatabase()
                 .getRandomRegionChallenge()
                 .orElseThrow(() -> new IllegalStateException("No region challenges available"));

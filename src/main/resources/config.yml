@@ -31,6 +31,8 @@ s3:
   # Enable this for most S3-compatible providers (MinIO, Ceph, etc.)
   path_style_access: true
   key_prefix: 'region-challenges/'
+  # How often (in seconds) to check that S3 is reachable. Set to 0 to disable the check.
+  health_check_interval: 300
 
 visual_challenge:
   region:

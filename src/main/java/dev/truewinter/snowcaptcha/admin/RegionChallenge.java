@@ -9,9 +9,10 @@ public class RegionChallenge {
     private final double y;
     private final double width;
     private final double height;
+    private final int version;
 
     public RegionChallenge(long id, String objectKey, String contentType, String instructions,
-                           double x, double y, double width, double height) {
+                           double x, double y, double width, double height, int version) {
         this.id = id;
         this.objectKey = objectKey;
         this.contentType = contentType;
@@ -20,6 +21,7 @@ public class RegionChallenge {
         this.y = y;
         this.width = width;
         this.height = height;
+        this.version = version;
     }
 
     public long getId() {
@@ -52,5 +54,9 @@ public class RegionChallenge {
 
     public double getHeight() {
         return height;
+    }
+
+    public int getVersion() {
+        return version;
     }
 }

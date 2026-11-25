@@ -19,16 +19,16 @@ public class AddCaptchaRoute {
 
     public static void post(Context ctx) {
         RegionChallengeUtil.UploadedImage image = null;
-        boolean insertedInDatabase = false;
+        boolean writeAttempted = false;
 
         try {
             RegionChallengeUtil.FormData form = RegionChallengeUtil.parseForm(ctx);
             image = RegionChallengeUtil.uploadImage(ctx.uploadedFile("image"));
 
+            writeAttempted = true;
             RegionChallenge regionChallenge = SnowCaptcha.getMysql().getMysqlRegionChallengeDatabase()
                     .addRegionChallenge(image.objectKey(), image.contentType(), form.instructions(),
                             form.x(), form.y(), form.width(), form.height());
-            insertedInDatabase = true;
 
             HashMap<String, Object> model = new HashMap<>();
             model.put("challenge", new ObjectMapper().writeValueAsString(
@@ -36,14 +36,10 @@ public class AddCaptchaRoute {
 
             Route.renderSuccess(ctx, "admin/edit-captcha", model, "Added captcha");
         } catch (IllegalArgumentException | IllegalStateException e) {
-            if (image != null && !insertedInDatabase) {
-                RegionChallengeUtil.deleteImageQuietly(image.objectKey());
-            }
+            RegionChallengeUtil.cleanupUploadedImage(image != null ? image.objectKey() : null, writeAttempted);
             Route.renderError(ctx, "admin/add-captcha", e.getMessage());
         } catch (Exception e) {
-            if (image != null && !insertedInDatabase) {
-                RegionChallengeUtil.deleteImageQuietly(image.objectKey());
-            }
+            RegionChallengeUtil.cleanupUploadedImage(image != null ? image.objectKey() : null, writeAttempted);
             SnowCaptcha.getLogger().error("Failed to add region challenge", e);
             throw new InternalServerErrorResponse();
         }

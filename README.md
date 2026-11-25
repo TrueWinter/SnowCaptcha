@@ -11,7 +11,9 @@ SnowCaptcha supports two visual challenge modes:
 - **Text**: the user types a randomly generated string.
 - **Region**: the user is asked to click part of an image (for example, "click the dog's nose"). Admins upload images and select the valid answer area for each. The answer area is stored only on the server and is never sent to the client.
 
-Region challenges are disabled by default. To enable them, configure an S3-compatible storage provider and set `visual_challenge.region.enabled` to `true` in the config file. The configured S3 endpoint must be reachable by end users, as images are served using short-lived presigned URLs. Challenge images are stored in S3, while their instructions and answer areas are stored in MySQL. If region challenges are enabled but no usable region challenge is available, SnowCaptcha falls back to the text challenge.
+Region challenges are disabled by default. To enable them, configure an S3-compatible storage provider and set `visual_challenge.region.enabled` to `true` in the config file. The configured S3 endpoint must be reachable by end users, as images are served using short-lived presigned URLs. Challenge images are stored in S3, while their instructions and answer areas are stored in MySQL.
+
+SnowCaptcha periodically checks S3 availability using `s3.health_check_interval` (default 300 seconds; set to `0` to disable the check). If S3 is unavailable, new visual challenges fall back to the text challenge until S3 recovers. If region challenges are enabled but no usable region challenge is available, SnowCaptcha also falls back to the text challenge.
 
 Currently, the following reputation sources are used:
 - Local: when a user completes the captcha, their IP prefix (/24 for IPv4, /48 for IPv6) is stored and will have a bad reputation for 10 minutes

@@ -26,12 +26,14 @@ function normalizeRect(start: { x: number, y: number }, end: { x: number, y: num
 
 export default function RegionSelector({ src, initialRect, onChange }: Props) {
 	const [rect, setRect] = useState<Rect | null>(initialRect ?? null);
+	const [previewRect, setPreviewRect] = useState<Rect | null>(null);
 	const [dragging, setDragging] = useState(false);
 	const start = useRef({ x: 0, y: 0 });
 	const imageRef = useRef<HTMLImageElement>();
 
 	useEffect(() => {
 		setRect(initialRect ?? null);
+		setPreviewRect(null);
 	}, [src, initialRect?.x, initialRect?.y, initialRect?.width, initialRect?.height]);
 
 	function getPoint(e: React.PointerEvent<HTMLImageElement>) {
@@ -46,7 +48,7 @@ export default function RegionSelector({ src, initialRect, onChange }: Props) {
 		e.preventDefault();
 		const point = getPoint(e);
 		start.current = point;
-		setRect({ x: point.x, y: point.y, width: 0, height: 0 });
+		setPreviewRect({ x: point.x, y: point.y, width: 0, height: 0 });
 		setDragging(true);
 		e.currentTarget.setPointerCapture(e.pointerId);
 	}
@@ -54,7 +56,7 @@ export default function RegionSelector({ src, initialRect, onChange }: Props) {
 	function pointerMove(e: React.PointerEvent<HTMLImageElement>) {
 		if (!dragging) return;
 		e.preventDefault();
-		setRect(normalizeRect(start.current, getPoint(e)));
+		setPreviewRect(normalizeRect(start.current, getPoint(e)));
 	}
 
 	function pointerUp(e: React.PointerEvent<HTMLImageElement>) {
@@ -62,12 +64,22 @@ export default function RegionSelector({ src, initialRect, onChange }: Props) {
 		e.preventDefault();
 		const finalRect = normalizeRect(start.current, getPoint(e));
 		setDragging(false);
-		setRect(finalRect);
+		setPreviewRect(null);
 
-		if (finalRect.width >= 0.005 && finalRect.height >= 0.005 && onChange) {
-			onChange(finalRect);
+		if (finalRect.width >= 0.005 && finalRect.height >= 0.005) {
+			setRect(finalRect);
+			if (onChange) {
+				onChange(finalRect);
+			}
 		}
 	}
+
+	function pointerCancel() {
+		setDragging(false);
+		setPreviewRect(null);
+	}
+
+	const displayRect = dragging ? previewRect : rect;
 
 	return (
 		<div className={css.selector}>
@@ -81,13 +93,14 @@ export default function RegionSelector({ src, initialRect, onChange }: Props) {
 					onPointerDown={pointerDown}
 					onPointerMove={pointerMove}
 					onPointerUp={pointerUp}
+					onPointerCancel={pointerCancel}
 				/>
-				{rect && rect.width > 0 && rect.height > 0 &&
+				{displayRect && displayRect.width > 0 && displayRect.height > 0 &&
 					<div className={css.selection} style={{
-						left: `${rect.x * 100}%`,
-						top: `${rect.y * 100}%`,
-						width: `${rect.width * 100}%`,
-						height: `${rect.height * 100}%`
+						left: `${displayRect.x * 100}%`,
+						top: `${displayRect.y * 100}%`,
+						width: `${displayRect.width * 100}%`,
+						height: `${displayRect.height * 100}%`
 					}}></div>
 				}
 			</div>

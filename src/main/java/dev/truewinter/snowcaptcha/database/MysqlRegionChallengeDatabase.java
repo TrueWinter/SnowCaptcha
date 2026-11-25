@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import dev.truewinter.snowcaptcha.admin.RegionChallenge;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -84,19 +85,21 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
             ResultSet keys = statement.getGeneratedKeys();
             if (keys.next()) {
                 return new RegionChallenge(keys.getLong(1), objectKey, contentType, instructions,
-                        x, y, width, height);
+                        x, y, width, height, 0);
             }
 
             throw new SQLException("Failed to get generated region challenge id");
         }
     }
 
-    public void updateRegionChallenge(long id, String objectKey, String contentType, String instructions,
-                                      double x, double y, double width, double height) throws SQLException {
+    public int updateRegionChallenge(long id, int expectedVersion, String objectKey, String contentType,
+                                      String instructions, double x, double y, double width, double height)
+            throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement(
                     "UPDATE region_challenges SET object_key = ?, content_type = ?, instructions = ?, " +
-                            "`x` = ?, `y` = ?, `width` = ?, `height` = ? WHERE id = ?;");
+                            "`x` = ?, `y` = ?, `width` = ?, `height` = ?, `version` = `version` + 1 " +
+                            "WHERE id = ? AND `version` = ?;");
             statement.setString(1, objectKey);
             statement.setString(2, contentType);
             statement.setString(3, instructions);
@@ -105,7 +108,18 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
             statement.setDouble(6, width);
             statement.setDouble(7, height);
             statement.setLong(8, id);
-            statement.execute();
+            statement.setInt(9, expectedVersion);
+            return statement.executeUpdate();
+        }
+    }
+
+    public boolean isObjectKeyReferenced(String objectKey) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT 1 FROM region_challenges WHERE object_key = ? LIMIT 1;");
+            statement.setString(1, objectKey);
+            ResultSet rs = statement.executeQuery();
+            return rs.next();
         }
     }
 
@@ -127,7 +141,8 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
                 rs.getDouble("x"),
                 rs.getDouble("y"),
                 rs.getDouble("width"),
-                rs.getDouble("height")
+                rs.getDouble("height"),
+                rs.getInt("version")
         );
     }
 
@@ -146,7 +161,26 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
                 "`x` double NOT NULL",
                 "`y` double NOT NULL",
                 "`width` double NOT NULL",
-                "`height` double NOT NULL"
+                "`height` double NOT NULL",
+                "`version` int NOT NULL DEFAULT 0"
         };
+    }
+
+    @Override
+    public void runAfterTableCreation() throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            DatabaseMetaData metadata = connection.getMetaData();
+            try (ResultSet rs = metadata.getColumns(connection.getCatalog(), null,
+                    tableName(), "version")) {
+                if (rs.next()) {
+                    return;
+                }
+            }
+
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE `region_challenges` " +
+                        "ADD COLUMN `version` int NOT NULL DEFAULT 0;");
+            }
+        }
     }
 }

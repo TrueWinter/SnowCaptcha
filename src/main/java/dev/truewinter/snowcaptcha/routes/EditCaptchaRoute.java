@@ -32,7 +32,7 @@ public class EditCaptchaRoute {
 
     public static void post(Context ctx) {
         RegionChallengeUtil.UploadedImage newImage = null;
-        boolean updatedInDatabase = false;
+        boolean writeAttempted = false;
 
         try {
             Optional<RegionChallenge> existing = getChallenge(ctx);
@@ -53,9 +53,29 @@ public class EditCaptchaRoute {
             }
 
             var database = SnowCaptcha.getMysql().getMysqlRegionChallengeDatabase();
-            database.updateRegionChallenge(existing.get().getId(), objectKey, contentType,
+            writeAttempted = true;
+            int updatedRows = database.updateRegionChallenge(existing.get().getId(),
+                    existing.get().getVersion(), objectKey, contentType,
                     form.instructions(), form.x(), form.y(), form.width(), form.height());
-            updatedInDatabase = true;
+
+            if (updatedRows == 0) {
+                if (newImage != null) {
+                    RegionChallengeUtil.deleteImageQuietly(newImage.objectKey());
+                }
+
+                HashMap<String, Object> model = new HashMap<>();
+                try {
+                    Optional<RegionChallenge> challenge = getChallenge(ctx);
+                    if (challenge.isPresent()) {
+                        model.put("challenge", writeChallenge(challenge.get()));
+                    }
+                } catch (SQLException | JsonProcessingException ignored) {
+                }
+
+                Route.renderError(ctx, "admin/edit-captcha", model,
+                        "This captcha was changed by another request. Review it and try again.");
+                return;
+            }
 
             if (newImage != null) {
                 RegionChallengeUtil.deleteImageQuietly(existing.get().getObjectKey());
@@ -73,9 +93,8 @@ public class EditCaptchaRoute {
 
             Route.renderSuccess(ctx, "admin/edit-captcha", model, "Saved captcha");
         } catch (IllegalArgumentException | IllegalStateException e) {
-            if (newImage != null && !updatedInDatabase) {
-                RegionChallengeUtil.deleteImageQuietly(newImage.objectKey());
-            }
+            RegionChallengeUtil.cleanupUploadedImage(
+                    newImage != null ? newImage.objectKey() : null, writeAttempted);
             HashMap<String, Object> model = new HashMap<>();
             try {
                 Optional<RegionChallenge> challenge = getChallenge(ctx);
@@ -86,9 +105,8 @@ public class EditCaptchaRoute {
             }
             Route.renderError(ctx, "admin/edit-captcha", model, e.getMessage());
         } catch (Exception e) {
-            if (newImage != null && !updatedInDatabase) {
-                RegionChallengeUtil.deleteImageQuietly(newImage.objectKey());
-            }
+            RegionChallengeUtil.cleanupUploadedImage(
+                    newImage != null ? newImage.objectKey() : null, writeAttempted);
             SnowCaptcha.getLogger().error("Failed to edit region challenge", e);
             throw new InternalServerErrorResponse();
         }

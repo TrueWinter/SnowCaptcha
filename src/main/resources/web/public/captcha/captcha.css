@@ -114,6 +114,8 @@
 }
 
 .regionImage {
+	position: relative;
+	display: inline-block;
 	max-width: min(400px, calc(100vw - 64px));
 }
 
@@ -125,6 +127,30 @@
 	cursor: crosshair;
 	user-select: none;
 	touch-action: manipulation;
+}
+
+.regionImage img:focus {
+	outline: 2px solid #4270df;
+	outline-offset: 2px;
+}
+
+.keyboardCursor {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border: 2px solid #4270df;
+	border-radius: 50%;
+	background-color: rgba(255, 255, 255, 0.35);
+	transform: translate(-50%, -50%);
+	box-shadow: 0 0 0 2px white;
+	pointer-events: none;
+}
+
+.regionHint {
+	font-size: 11px;
+	color: #555;
+	max-width: 400px;
+	text-align: center;
 }
 
 .form {
@@ -198,4 +224,8 @@
 
 .root[data-mode="dark"] .refresh svg path {
 	stroke: #ddd;
+}
+
+.root[data-mode="dark"] .regionHint {
+	color: #bbb;
 }
