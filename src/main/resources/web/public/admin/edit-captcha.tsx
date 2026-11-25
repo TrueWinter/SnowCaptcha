@@ -54,6 +54,7 @@ function EditCaptcha() {
 						defaultValue={challenge.current.instructions} />
 				</FormInput>
 				<div>
+					<input type="hidden" name="version" value={challenge.current.version} />
 					{imageSrc ?
 						<RegionSelector src={imageSrc} initialRect={rect} onChange={setRect} /> :
 						<div className="error">Image unavailable, upload a new image.</div>

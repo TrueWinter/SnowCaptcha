@@ -42,6 +42,15 @@ public class EditCaptchaRoute {
             }
 
             RegionChallengeUtil.FormData form = RegionChallengeUtil.parseForm(ctx);
+
+            int expectedVersion;
+            try {
+                expectedVersion = Integer.parseInt(ctx.formParam("version"));
+            } catch (NumberFormatException e) {
+                renderConflict(ctx);
+                return;
+            }
+
             var file = ctx.uploadedFile("image");
             String objectKey = existing.get().getObjectKey();
             String contentType = existing.get().getContentType();
@@ -55,7 +64,7 @@ public class EditCaptchaRoute {
             var database = SnowCaptcha.getMysql().getMysqlRegionChallengeDatabase();
             writeAttempted = true;
             int updatedRows = database.updateRegionChallenge(existing.get().getId(),
-                    existing.get().getVersion(), objectKey, contentType,
+                    expectedVersion, objectKey, contentType,
                     form.instructions(), form.x(), form.y(), form.width(), form.height());
 
             if (updatedRows == 0) {
@@ -63,17 +72,7 @@ public class EditCaptchaRoute {
                     RegionChallengeUtil.deleteImageQuietly(newImage.objectKey());
                 }
 
-                HashMap<String, Object> model = new HashMap<>();
-                try {
-                    Optional<RegionChallenge> challenge = getChallenge(ctx);
-                    if (challenge.isPresent()) {
-                        model.put("challenge", writeChallenge(challenge.get()));
-                    }
-                } catch (SQLException | JsonProcessingException ignored) {
-                }
-
-                Route.renderError(ctx, "admin/edit-captcha", model,
-                        "This captcha was changed by another request. Review it and try again.");
+                renderConflict(ctx);
                 return;
             }
 
@@ -110,6 +109,20 @@ public class EditCaptchaRoute {
             SnowCaptcha.getLogger().error("Failed to edit region challenge", e);
             throw new InternalServerErrorResponse();
         }
+    }
+
+    private static void renderConflict(Context ctx) {
+        HashMap<String, Object> model = new HashMap<>();
+        try {
+            Optional<RegionChallenge> challenge = getChallenge(ctx);
+            if (challenge.isPresent()) {
+                model.put("challenge", writeChallenge(challenge.get()));
+            }
+        } catch (SQLException | JsonProcessingException ignored) {
+        }
+
+        Route.renderError(ctx, "admin/edit-captcha", model,
+                "This captcha was changed by another request. Review it and try again.");
     }
 
     private static Optional<RegionChallenge> getChallenge(Context ctx) throws SQLException {

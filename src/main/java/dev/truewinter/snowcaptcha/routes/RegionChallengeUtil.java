@@ -169,6 +169,7 @@ final class RegionChallengeUtil {
         model.put("y", challenge.getY());
         model.put("width", challenge.getWidth());
         model.put("height", challenge.getHeight());
+        model.put("version", challenge.getVersion());
         model.put("imageUrl", getImageUrl(challenge));
         return model;
     }

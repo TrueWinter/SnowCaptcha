@@ -5,6 +5,7 @@ export interface RegionChallenge {
 	y: number
 	width: number
 	height: number
+	version: number
 	imageUrl: string
 }
 
