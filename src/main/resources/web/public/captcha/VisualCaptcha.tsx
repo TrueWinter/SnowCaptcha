@@ -136,13 +136,12 @@ export default function VisualCaptcha({
 				<div className={css.image}>
 					<img src={`data:image/jpeg;base64,${challenge.img}`} />
 				</div> :
-				<div className={css.regionImage}>
+				<div className={css.regionImage} style={{ '--w': challenge.imgWidth, '--h': challenge.imgHeight }}>
 					<img
 						ref={focusRef}
 						src={challenge.img}
 						width={challenge.imgWidth || undefined}
 						height={challenge.imgHeight || undefined}
-						style={{ '--w': challenge.imgWidth, '--h': challenge.imgHeight }}
 						draggable={false}
 						tabIndex={0}
 						role="button"

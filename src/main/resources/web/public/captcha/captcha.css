@@ -116,12 +116,17 @@
 .regionImage {
 	position: relative;
 	display: inline-block;
-	width: min(400px, calc(100vw - 64px));
+	width: min(
+	    400px,
+	    calc(100vw - 64px),
+	    calc(var(--w) * 1px),
+	    calc(60vh * var(--w) / var(--h))
+	);
 }
 
 .regionImage img {
 	display: block;
-	width: min(100%, calc(60vh * var(--w) / var(--h)));;
+	width: 100%;
 	height: auto;
 	cursor: crosshair;
 	user-select: none;
