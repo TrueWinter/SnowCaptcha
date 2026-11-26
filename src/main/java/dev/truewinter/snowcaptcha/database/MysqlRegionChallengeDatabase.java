@@ -66,12 +66,14 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
     }
 
     public RegionChallenge addRegionChallenge(String objectKey, String contentType, String instructions,
-                                              double x, double y, double width, double height) throws SQLException {
+                                              double x, double y, double width, double height,
+                                              int imageWidth, int imageHeight) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO region_challenges " +
-                            "(object_key, content_type, instructions, `x`, `y`, `width`, `height`) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?);",
+                            "(object_key, content_type, instructions, `x`, `y`, `width`, `height`, " +
+                            "`image_width`, `image_height`) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
                     Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, objectKey);
             statement.setString(2, contentType);
@@ -80,12 +82,14 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
             statement.setDouble(5, y);
             statement.setDouble(6, width);
             statement.setDouble(7, height);
+            statement.setInt(8, imageWidth);
+            statement.setInt(9, imageHeight);
             statement.execute();
 
             ResultSet keys = statement.getGeneratedKeys();
             if (keys.next()) {
                 return new RegionChallenge(keys.getLong(1), objectKey, contentType, instructions,
-                        x, y, width, height, 0);
+                        x, y, width, height, imageWidth, imageHeight, 0);
             }
 
             throw new SQLException("Failed to get generated region challenge id");
@@ -93,12 +97,13 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
     }
 
     public int updateRegionChallenge(long id, int expectedVersion, String objectKey, String contentType,
-                                      String instructions, double x, double y, double width, double height)
-            throws SQLException {
+                                      String instructions, double x, double y, double width, double height,
+                                      int imageWidth, int imageHeight) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement(
                     "UPDATE region_challenges SET object_key = ?, content_type = ?, instructions = ?, " +
-                            "`x` = ?, `y` = ?, `width` = ?, `height` = ?, `version` = `version` + 1 " +
+                            "`x` = ?, `y` = ?, `width` = ?, `height` = ?, `image_width` = ?, " +
+                            "`image_height` = ?, `version` = `version` + 1 " +
                             "WHERE id = ? AND `version` = ?;");
             statement.setString(1, objectKey);
             statement.setString(2, contentType);
@@ -107,8 +112,10 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
             statement.setDouble(5, y);
             statement.setDouble(6, width);
             statement.setDouble(7, height);
-            statement.setLong(8, id);
-            statement.setInt(9, expectedVersion);
+            statement.setInt(8, imageWidth);
+            statement.setInt(9, imageHeight);
+            statement.setLong(10, id);
+            statement.setInt(11, expectedVersion);
             return statement.executeUpdate();
         }
     }
@@ -142,6 +149,8 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
                 rs.getDouble("y"),
                 rs.getDouble("width"),
                 rs.getDouble("height"),
+                rs.getInt("image_width"),
+                rs.getInt("image_height"),
                 rs.getInt("version")
         );
     }
@@ -162,6 +171,8 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
                 "`y` double NOT NULL",
                 "`width` double NOT NULL",
                 "`height` double NOT NULL",
+                "`image_width` int NOT NULL DEFAULT 0",
+                "`image_height` int NOT NULL DEFAULT 0",
                 "`version` int NOT NULL DEFAULT 0"
         };
     }
@@ -169,18 +180,24 @@ public class MysqlRegionChallengeDatabase extends MysqlDatabase {
     @Override
     public void runAfterTableCreation() throws SQLException {
         try (Connection connection = ds.getConnection()) {
-            DatabaseMetaData metadata = connection.getMetaData();
-            try (ResultSet rs = metadata.getColumns(connection.getCatalog(), null,
-                    tableName(), "version")) {
-                if (rs.next()) {
-                    return;
-                }
-            }
+            addColumnIfMissing(connection, "version", "`version` int NOT NULL DEFAULT 0");
+            addColumnIfMissing(connection, "image_width", "`image_width` int NOT NULL DEFAULT 0");
+            addColumnIfMissing(connection, "image_height", "`image_height` int NOT NULL DEFAULT 0");
+        }
+    }
 
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("ALTER TABLE `region_challenges` " +
-                        "ADD COLUMN `version` int NOT NULL DEFAULT 0;");
+    private void addColumnIfMissing(Connection connection, String column, String definition)
+            throws SQLException {
+        DatabaseMetaData metadata = connection.getMetaData();
+        try (ResultSet rs = metadata.getColumns(connection.getCatalog(), null,
+                tableName(), column)) {
+            if (rs.next()) {
+                return;
             }
+        }
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("ALTER TABLE `region_challenges` ADD COLUMN " + definition + ";");
         }
     }
 }

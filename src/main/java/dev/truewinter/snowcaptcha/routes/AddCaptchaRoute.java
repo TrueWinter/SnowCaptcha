@@ -28,7 +28,8 @@ public class AddCaptchaRoute {
             writeAttempted = true;
             RegionChallenge regionChallenge = SnowCaptcha.getMysql().getMysqlRegionChallengeDatabase()
                     .addRegionChallenge(image.objectKey(), image.contentType(), form.instructions(),
-                            form.x(), form.y(), form.width(), form.height());
+                            form.x(), form.y(), form.width(), form.height(),
+                            image.width(), image.height());
 
             HashMap<String, Object> model = new HashMap<>();
             model.put("challenge", new ObjectMapper().writeValueAsString(

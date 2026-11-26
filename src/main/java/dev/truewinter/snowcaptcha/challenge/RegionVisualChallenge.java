@@ -12,6 +12,8 @@ public class RegionVisualChallenge extends VisualChallenge {
 
     private String img;
     private String instructions;
+    private int imgWidth;
+    private int imgHeight;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private double x;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -23,10 +25,12 @@ public class RegionVisualChallenge extends VisualChallenge {
 
     public RegionVisualChallenge() {}
 
-    public RegionVisualChallenge(String img, String instructions, double x, double y,
-                                 double width, double height) {
+    public RegionVisualChallenge(String img, String instructions, int imgWidth, int imgHeight,
+                                 double x, double y, double width, double height) {
         this.img = img;
         this.instructions = instructions;
+        this.imgWidth = imgWidth;
+        this.imgHeight = imgHeight;
         this.x = x;
         this.y = y;
         this.width = width;
@@ -53,6 +57,8 @@ public class RegionVisualChallenge extends VisualChallenge {
         return new RegionVisualChallenge(
                 img,
                 regionChallenge.getInstructions(),
+                regionChallenge.getImageWidth(),
+                regionChallenge.getImageHeight(),
                 regionChallenge.getX(),
                 regionChallenge.getY(),
                 regionChallenge.getWidth(),
@@ -71,6 +77,14 @@ public class RegionVisualChallenge extends VisualChallenge {
 
     public String getInstructions() {
         return instructions;
+    }
+
+    public int getImgWidth() {
+        return imgWidth;
+    }
+
+    public int getImgHeight() {
+        return imgHeight;
     }
 
     public double getX() {

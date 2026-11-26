@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 interface Props {
 	challenge: VisualChallenge
 	callback: (answer: string) => void
+	focusRef?: React.MutableRefObject<HTMLImageElement | null>
 }
 
 export interface BaseVisualChallenge {
@@ -19,6 +20,8 @@ export interface TextVisualChallenge extends BaseVisualChallenge {
 export interface RegionVisualChallenge extends BaseVisualChallenge {
 	type: 'REGION'
 	instructions: string
+	imgWidth: number
+	imgHeight: number
 }
 
 export type VisualChallenge = TextVisualChallenge | RegionVisualChallenge
@@ -29,11 +32,11 @@ function clamp(value: number) {
 
 export default function VisualCaptcha({
 	challenge,
-	callback
+	callback,
+	focusRef
 }: Props) {
 	const formRef = useRef<HTMLFormElement>();
 	const refreshRef = useRef<HTMLButtonElement>();
-	const imageRef = useRef<HTMLImageElement>();
 	const [keyboardPosition, setKeyboardPosition] = useState({ x: 0.5, y: 0.5 });
 	const [keyboardActive, setKeyboardActive] = useState(false);
 
@@ -97,19 +100,13 @@ export default function VisualCaptcha({
 		callback('GETNEW');
 	}
 
-	function handleRefreshKeyPress(e: KeyboardEvent) {
-		if (['Tab', 'Shift', 'Alt', 'Control', 'Escape'].includes(e.key)) return;
-		(e.target as HTMLDivElement).blur();
-		refresh();
-	}
-
 	useEffect(() => {
 		if (challenge.type !== 'REGION') return;
 
 		setKeyboardPosition({ x: 0.5, y: 0.5 });
 		setKeyboardActive(false);
 
-		const frame = requestAnimationFrame(() => imageRef.current?.focus());
+		const frame = requestAnimationFrame(() => focusRef?.current?.focus());
 		return () => cancelAnimationFrame(frame);
 	}, [challenge.token]);
 
@@ -118,14 +115,12 @@ export default function VisualCaptcha({
 			formRef.current.addEventListener('submit', validateAnswer);
 		}
 		refreshRef.current.addEventListener('click', refresh);
-		refreshRef.current.addEventListener('keyup', handleRefreshKeyPress);
 
 		return () => {
 			if (formRef.current) {
 				formRef.current.removeEventListener('submit', validateAnswer);
 			}
 			refreshRef.current.removeEventListener('click', refresh);
-			refreshRef.current.removeEventListener('keyup', handleRefreshKeyPress);
 		}
 	}, []);
 
@@ -143,15 +138,16 @@ export default function VisualCaptcha({
 				</div> :
 				<div className={css.regionImage}>
 					<img
-						ref={imageRef}
+						ref={focusRef}
 						src={challenge.img}
+						width={challenge.imgWidth || undefined}
+						height={challenge.imgHeight || undefined}
 						draggable={false}
 						tabIndex={0}
 						role="button"
 						aria-label={challenge.instructions}
 						onClick={handleImageClick}
 						onKeyDown={handleImageKeyDown}
-						onFocus={() => setKeyboardActive(true)}
 						onBlur={() => setKeyboardActive(false)}
 					/>
 					{keyboardActive &&
@@ -164,7 +160,9 @@ export default function VisualCaptcha({
 			}
 			{challenge.type === 'REGION' &&
 				<div className={css.regionHint}>
-					Click the image, or use the arrow keys and press Enter to select.
+					Click the image to select. <span className={css.keyboardHint}>
+						Or use the arrow keys and press Enter.
+					</span>
 				</div>
 			}
 			<form className={css.form} ref={formRef}>

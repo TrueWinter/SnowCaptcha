@@ -25,7 +25,9 @@ final class RegionChallengeUtil {
 
     record FormData(String instructions, double x, double y, double width, double height) {}
 
-    record UploadedImage(String objectKey, String contentType) {}
+    record ImageInfo(String contentType, int width, int height) {}
+
+    record UploadedImage(String objectKey, String contentType, int width, int height) {}
 
     private RegionChallengeUtil() {}
 
@@ -95,26 +97,26 @@ final class RegionChallengeUtil {
             throw new IllegalArgumentException("Image must be 5MB or smaller");
         }
 
-        String contentType = validateImage(bytes);
+        ImageInfo image = validateImage(bytes);
 
         S3Storage s3 = SnowCaptcha.getS3();
         if (s3 == null) {
             throw new IllegalStateException("S3 is not configured");
         }
 
-        String extension = contentType.equals("image/png") ? "png" : "jpg";
+        String extension = image.contentType().equals("image/png") ? "png" : "jpg";
         String prefix = s3.getKeyPrefix();
         if (!prefix.isEmpty() && !prefix.endsWith("/")) {
             prefix += "/";
         }
 
         String objectKey = prefix + UUID.randomUUID() + "." + extension;
-        s3.putObject(objectKey, bytes, contentType);
+        s3.putObject(objectKey, bytes, image.contentType());
 
-        return new UploadedImage(objectKey, contentType);
+        return new UploadedImage(objectKey, image.contentType(), image.width(), image.height());
     }
 
-    private static String validateImage(byte[] bytes) {
+    private static ImageInfo validateImage(byte[] bytes) {
         try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
             if (input == null) {
                 throw new IllegalArgumentException("Image could not be read");
@@ -150,7 +152,7 @@ final class RegionChallengeUtil {
                     throw new IllegalArgumentException("Image could not be read");
                 }
 
-                return contentType;
+                return new ImageInfo(contentType, width, height);
             } finally {
                 reader.dispose();
             }
@@ -169,6 +171,8 @@ final class RegionChallengeUtil {
         model.put("y", challenge.getY());
         model.put("width", challenge.getWidth());
         model.put("height", challenge.getHeight());
+        model.put("imageWidth", challenge.getImageWidth());
+        model.put("imageHeight", challenge.getImageHeight());
         model.put("version", challenge.getVersion());
         model.put("imageUrl", getImageUrl(challenge));
         return model;

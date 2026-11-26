@@ -54,18 +54,23 @@ public class EditCaptchaRoute {
             var file = ctx.uploadedFile("image");
             String objectKey = existing.get().getObjectKey();
             String contentType = existing.get().getContentType();
+            int imageWidth = existing.get().getImageWidth();
+            int imageHeight = existing.get().getImageHeight();
 
             if (file != null && file.size() > 0) {
                 newImage = RegionChallengeUtil.uploadImage(file);
                 objectKey = newImage.objectKey();
                 contentType = newImage.contentType();
+                imageWidth = newImage.width();
+                imageHeight = newImage.height();
             }
 
             var database = SnowCaptcha.getMysql().getMysqlRegionChallengeDatabase();
             writeAttempted = true;
             int updatedRows = database.updateRegionChallenge(existing.get().getId(),
                     expectedVersion, objectKey, contentType,
-                    form.instructions(), form.x(), form.y(), form.width(), form.height());
+                    form.instructions(), form.x(), form.y(), form.width(), form.height(),
+                    imageWidth, imageHeight);
 
             if (updatedRows == 0) {
                 if (newImage != null) {

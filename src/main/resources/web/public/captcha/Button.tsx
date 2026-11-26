@@ -37,6 +37,7 @@ export default function Button({ setResponse, sitekey, callback, host, setError 
 	const [visualChallenge, setVisualChallenge] = useState<VisualChallenge>();
 	const tokenRef = useRef(null);
 	const arrowRef = useRef(null);
+	const visualFocusRef = useRef<HTMLImageElement | null>(null);
 	const solvedChallenges = useRef({});
 
 	function stopTimer() {
@@ -239,10 +240,12 @@ export default function Button({ setResponse, sitekey, callback, host, setError 
 			<div className={[status === 'IN_PROGRESS' ? css['button-spinner'] :
 				status === 'SOLVED' ? css['button-checkmark'] :
 				css.button].join(' ')} tabIndex={0} ref={buttonRef} {...getReferenceProps()}></div>
-			{isVisualCaptchaShown && <FloatingFocusManager context={context} modal={false}>
+			{isVisualCaptchaShown && <FloatingFocusManager context={context} modal={false}
+				initialFocus={visualChallenge?.type === 'REGION' ? visualFocusRef : 0}>
 				<div ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()}>
 					<FloatingArrow ref={arrowRef} context={context} className={css.arrow} />
-					<VisualCaptcha challenge={visualChallenge} callback={visualCaptchaCallback} />
+					<VisualCaptcha challenge={visualChallenge} callback={visualCaptchaCallback}
+						focusRef={visualFocusRef} />
 				</div>
 			</FloatingFocusManager>}
 		</>

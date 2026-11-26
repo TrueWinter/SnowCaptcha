@@ -153,6 +153,12 @@
 	text-align: center;
 }
 
+@media (pointer: coarse) {
+	.keyboardHint, .keyboardCursor {
+		display: none !important;
+	}
+}
+
 .form {
 	display: flex;
 	gap: 8px;
