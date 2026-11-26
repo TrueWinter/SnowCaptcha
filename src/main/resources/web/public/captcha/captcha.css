@@ -123,8 +123,6 @@
 	display: block;
 	width: min(100%, calc(60vh * var(--w) / var(--h)));;
 	height: auto;
-	/*max-width: 100%;
-	max-height: 60vh;*/
 	cursor: crosshair;
 	user-select: none;
 	touch-action: manipulation;
