@@ -185,7 +185,6 @@ export default function VisualCaptcha({
 						aria-label={challenge.instructions}
 						onClick={handleImageClick}
 						onKeyDown={handleImageKeyDown}
-						onBlur={() => setKeyboardActive(false)}
 					/>
 					{keyboardActive &&
 						<div className={css.keyboardCursor} style={{
