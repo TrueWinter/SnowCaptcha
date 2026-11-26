@@ -142,6 +142,7 @@ export default function VisualCaptcha({
 						src={challenge.img}
 						width={challenge.imgWidth || undefined}
 						height={challenge.imgHeight || undefined}
+						style={{ '--w': challenge.imgWidth, '--h': challenge.imgHeight }}
 						draggable={false}
 						tabIndex={0}
 						role="button"
