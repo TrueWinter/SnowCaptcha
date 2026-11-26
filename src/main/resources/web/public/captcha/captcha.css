@@ -131,8 +131,7 @@
 }
 
 .regionImage img:focus {
-	outline: 2px solid #4270df;
-	outline-offset: 2px;
+	outline: none;
 }
 
 .keyboardCursor {
