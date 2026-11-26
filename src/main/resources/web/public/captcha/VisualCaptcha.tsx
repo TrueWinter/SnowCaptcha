@@ -30,6 +30,14 @@ function clamp(value: number) {
 	return Math.max(0, Math.min(1, value));
 }
 
+function isEditableElement(element: Element | null) {
+	if (!element) return false;
+
+	const tagName = element.tagName;
+	return tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' ||
+		(element as HTMLElement).isContentEditable;
+}
+
 export default function VisualCaptcha({
 	challenge,
 	callback,
@@ -58,18 +66,12 @@ export default function VisualCaptcha({
 		submitPoint(x, y);
 	}
 
-	function handleImageKeyDown(e: React.KeyboardEvent<HTMLImageElement>) {
-		if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-			e.preventDefault();
-			submitPoint(keyboardPosition.x, keyboardPosition.y);
-			return;
-		}
-
-		const step = e.shiftKey ? 0.005 : 0.02;
+	function moveKeyboardCursor(key: string, shiftKey: boolean) {
+		const step = shiftKey ? 0.005 : 0.02;
 		let dx = 0;
 		let dy = 0;
 
-		switch (e.key) {
+		switch (key) {
 			case 'ArrowLeft':
 				dx = -step;
 				break;
@@ -83,15 +85,27 @@ export default function VisualCaptcha({
 				dy = step;
 				break;
 			default:
-				return;
+				return false;
 		}
 
-		e.preventDefault();
 		setKeyboardActive(true);
 		setKeyboardPosition(position => ({
 			x: clamp(position.x + dx),
 			y: clamp(position.y + dy)
 		}));
+		return true;
+	}
+
+	function handleImageKeyDown(e: React.KeyboardEvent<HTMLImageElement>) {
+		if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+			e.preventDefault();
+			submitPoint(keyboardPosition.x, keyboardPosition.y);
+			return;
+		}
+
+		if (moveKeyboardCursor(e.key, e.shiftKey)) {
+			e.preventDefault();
+		}
 	}
 
 	function refresh() {
@@ -109,6 +123,26 @@ export default function VisualCaptcha({
 		const frame = requestAnimationFrame(() => focusRef?.current?.focus());
 		return () => cancelAnimationFrame(frame);
 	}, [challenge.token]);
+
+	useEffect(() => {
+		if (challenge.type !== 'REGION') return;
+
+		function handleWindowKeyDown(e: KeyboardEvent) {
+			if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+			const image = focusRef?.current;
+			if (!image || document.activeElement === image) return;
+			if (isEditableElement(document.activeElement)) return;
+
+			if (moveKeyboardCursor(e.key, e.shiftKey)) {
+				e.preventDefault();
+				image.focus();
+			}
+		}
+
+		window.addEventListener('keydown', handleWindowKeyDown);
+		return () => window.removeEventListener('keydown', handleWindowKeyDown);
+	}, [challenge.type, challenge.token]);
 
 	useEffect(() => {
 		if (formRef.current) {
@@ -136,7 +170,10 @@ export default function VisualCaptcha({
 				<div className={css.image}>
 					<img src={`data:image/jpeg;base64,${challenge.img}`} />
 				</div> :
-				<div className={css.regionImage} style={{ '--w': challenge.imgWidth, '--h': challenge.imgHeight }}>
+				<div className={css.regionImage} style={{
+					'--w': challenge.imgWidth,
+					'--h': challenge.imgHeight
+				} as React.CSSProperties}>
 					<img
 						ref={focusRef}
 						src={challenge.img}
