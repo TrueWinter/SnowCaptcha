@@ -61,6 +61,7 @@ public class WebServer extends Thread {
 
         server = Javalin.create(c -> {
             c.showJavalinBanner = false;
+            c.http.maxRequestSize = 6_000_000L;
             c.staticFiles.add(s -> {
                 s.directory = "web/public";
                 if (devModeConfig.isEnabled()) {
@@ -154,6 +155,12 @@ public class WebServer extends Thread {
         server.post("/login", LoginRoute::post);
         server.get("/logout", LogoutRoute::get);
         server.get("/admin/widgets", WidgetsRoute::get);
+        server.get("/admin/captchas", CaptchasRoute::get);
+        server.get("/admin/captchas/add", AddCaptchaRoute::get);
+        server.post("/admin/captchas/add", AddCaptchaRoute::post);
+        server.get("/admin/captchas/{id}/edit", EditCaptchaRoute::get);
+        server.post("/admin/captchas/{id}/edit", EditCaptchaRoute::post);
+        server.post("/admin/captchas/{id}/delete", DeleteCaptchaRoute::post);
         server.get("/admin/accounts", AccountsRoute::get);
         server.get("/admin/accounts/{username}/edit", EditAccountRoute::get);
         server.post("/admin/accounts/{username}/edit", EditAccountRoute::post);

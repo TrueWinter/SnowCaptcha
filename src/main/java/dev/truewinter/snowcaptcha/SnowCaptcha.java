@@ -4,6 +4,8 @@ import dev.truewinter.snowcaptcha.config.Config;
 import dev.truewinter.snowcaptcha.config.ReputationConfig;
 import dev.truewinter.snowcaptcha.database.Mysql;
 import dev.truewinter.snowcaptcha.database.Redis;
+import dev.truewinter.snowcaptcha.storage.S3AvailabilityMonitor;
+import dev.truewinter.snowcaptcha.storage.S3Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +16,8 @@ public class SnowCaptcha {
     private static DebugLogger debugLogger;
     private static Redis redis;
     private static Mysql mysql;
+    private static S3Storage s3;
+    private static S3AvailabilityMonitor s3AvailabilityMonitor;
     private static Config config = null;
 
     public static void main(String[] args) {
@@ -31,12 +35,37 @@ public class SnowCaptcha {
         redis = new Redis(config.getRedisConfig());
         mysql = new Mysql(config.getMysqlConfig());
 
+        if (config.getS3Config().isConfigured()) {
+            try {
+                s3 = new S3Storage(config.getS3Config());
+            } catch (Exception e) {
+                logger.error("Failed to initialize S3, region challenges will fall back to text challenges", e);
+            }
+        }
+
+        if (config.getVisualChallengeConfig().isRegionEnabled()) {
+            if (s3 == null) {
+                logger.warn("Region challenges are enabled but S3 is not available, falling back to text challenges");
+            } else {
+                s3AvailabilityMonitor = new S3AvailabilityMonitor(s3,
+                        mysql.getMysqlRegionChallengeDatabase(),
+                        config.getS3Config().getHealthCheckInterval());
+                s3AvailabilityMonitor.start();
+            }
+        }
+
         WebServer webServer = new WebServer(config.getHttpConfig(), config.getDevModeConfig());
         webServer.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             webServer.shutdown();
+            if (s3AvailabilityMonitor != null) {
+                s3AvailabilityMonitor.close();
+            }
             mysql.close();
+            if (s3 != null) {
+                s3.close();
+            }
         }));
     }
 
@@ -54,6 +83,14 @@ public class SnowCaptcha {
 
     public static Mysql getMysql() {
         return mysql;
+    }
+
+    public static S3Storage getS3() {
+        return s3;
+    }
+
+    public static Config getConfig() {
+        return config;
     }
 
     public static ReputationConfig getReputationConfig() {

@@ -4,7 +4,7 @@ import css from './captcha.css';
 import { CallbackData, Status } from './Root';
 import { useEffect, useRef, useState } from 'react';
 import { pow } from './util';
-import VisualCaptcha, { TextVisualChallenge } from './VisualCaptcha';
+import VisualCaptcha, { VisualChallenge } from './VisualCaptcha';
 import { FloatingArrow, FloatingFocusManager, arrow, autoUpdate, offset, useClick, useDismiss, useFloating, useInteractions, useRole } from '@floating-ui/react';
 import { flip, shift } from '@floating-ui/core';
 
@@ -34,9 +34,10 @@ export default function Button({ setResponse, sitekey, callback, host, setError 
 	const buttonRef = useRef<HTMLDivElement>(null);
 	const timer = useRef<NodeJS.Timeout | null>(null);
 	const [isVisualCaptchaShown, setIsVisualCaptchaShown] = useState(false);
-	const [visualChallenge, setVisualChallenge] = useState<TextVisualChallenge>();
+	const [visualChallenge, setVisualChallenge] = useState<VisualChallenge>();
 	const tokenRef = useRef(null);
 	const arrowRef = useRef(null);
+	const visualFocusRef = useRef<HTMLImageElement | null>(null);
 	const solvedChallenges = useRef({});
 
 	function stopTimer() {
@@ -121,10 +122,20 @@ export default function Button({ setResponse, sitekey, callback, host, setError 
 				case 'TEXT':
 					setVisualChallenge({
 						token: ch,
+						type: 'TEXT',
 						...c.challenge
 					});
 					setIsVisualCaptchaShown(true);
 					// The spinner can be a bit distracting when completing a visual captcha
+					setStatus('UNSOLVED');
+					break;
+				case 'REGION':
+					setVisualChallenge({
+						token: ch,
+						type: 'REGION',
+						...c.challenge
+					});
+					setIsVisualCaptchaShown(true);
 					setStatus('UNSOLVED');
 					break;
 			}
@@ -229,10 +240,12 @@ export default function Button({ setResponse, sitekey, callback, host, setError 
 			<div className={[status === 'IN_PROGRESS' ? css['button-spinner'] :
 				status === 'SOLVED' ? css['button-checkmark'] :
 				css.button].join(' ')} tabIndex={0} ref={buttonRef} {...getReferenceProps()}></div>
-			{isVisualCaptchaShown && <FloatingFocusManager context={context} modal={false}>
+			{isVisualCaptchaShown && <FloatingFocusManager context={context} modal={false}
+				initialFocus={visualChallenge?.type === 'REGION' ? visualFocusRef : 0}>
 				<div ref={refs.setFloating} style={floatingStyles} {...getFloatingProps()}>
 					<FloatingArrow ref={arrowRef} context={context} className={css.arrow} />
-					<VisualCaptcha challenge={visualChallenge} callback={visualCaptchaCallback} />
+					<VisualCaptcha challenge={visualChallenge} callback={visualCaptchaCallback}
+						focusRef={visualFocusRef} />
 				</div>
 			</FloatingFocusManager>}
 		</>

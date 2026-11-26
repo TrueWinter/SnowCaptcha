@@ -6,6 +6,15 @@ SnowCaptcha is designed to collect and process as little data as possible while 
 
 When a user tries to complete the captcha, SnowCaptcha checks the reputation associated with the IP address. If the IP address has a bad reputation, the user will have to complete a visual challenge. A proof-of-work challenge is always issued.
 
+SnowCaptcha supports two visual challenge modes:
+
+- **Text**: the user types a randomly generated string.
+- **Region**: the user is asked to click part of an image (for example, "click the dog's nose"). Admins upload images and select the valid answer area for each. The answer area is stored only on the server and is never sent to the client.
+
+Region challenges are disabled by default. To enable them, configure an S3-compatible storage provider and set `visual_challenge.region.enabled` to `true` in the config file. The configured S3 endpoint must be reachable by end users, as images are served using short-lived presigned URLs. Challenge images are stored in S3, while their instructions and answer areas are stored in MySQL.
+
+SnowCaptcha periodically checks S3 availability using `s3.health_check_interval` (default 300 seconds; set to `0` to disable the check). If S3 is unavailable, new visual challenges fall back to the text challenge until S3 recovers. If region challenges are enabled but no usable region challenge is available, SnowCaptcha also falls back to the text challenge.
+
 Currently, the following reputation sources are used:
 - Local: when a user completes the captcha, their IP prefix (/24 for IPv4, /48 for IPv6) is stored and will have a bad reputation for 10 minutes
 - [BGP.tools](https://bgp.tools): networks that are categorized by BGP.tools as being a server host, VPN host, Tor services host, or an event network will have all of their prefixes added to SnowCaptcha's bad reputation list (this data is updated at most once every 2 hours)
@@ -33,6 +42,8 @@ After starting SnowCaptcha for the first time, a configuration file will be crea
 Configure your web server to terminate SSL and proxy requests to SnowCaptcha. You will need to set up a header that contains the user's IP address (ensuring that the header contains only the IP address, and that IPv4 addresses are not in the IPv4-mapped IPv6 address format), and configure this header in the SnowCaptcha config file.
 
 Then, log in to the SnowCaptcha dashboard using the username `admin` and password `snowcaptcha`. It is recommended to change the password as soon as possible. Add a widget, taking note of the site key and secret key (which will only be shown once).
+
+If you want to use region challenges, configure the `s3` section in the config file and restart SnowCaptcha, then add at least one image from the Captchas page in the dashboard. For each image, enter the instructions and drag over the image to select the area that users must click.
 
 SnowCaptcha is designed to support multiple instances connected to the same Redis and MySQL database. It is recommended to run at least two instances for redundancy and to allow for zero-downtime updates. You should ensure that your load balancer only considers an instance down if it receives a non-200 response from the `/health` endpoint or the connection times out.
 

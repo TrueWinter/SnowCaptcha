@@ -96,6 +96,7 @@
 	flex-direction: column;
 	width: fit-content;
 	min-width: 300px;
+	max-width: calc(100vw - 32px);
 	background-color: #f0f0f0;
 	border: 1px solid #bbb;
 	color: black;
@@ -110,6 +111,56 @@
 	width: 270px;
 	height: 100px;
 	background-color: #444;
+}
+
+.regionImage {
+	position: relative;
+	display: inline-block;
+	width: min(
+	    400px,
+	    calc(100vw - 64px),
+	    calc(var(--w) * 1px),
+	    calc(60vh * var(--w) / var(--h))
+	);
+}
+
+.regionImage img {
+	display: block;
+	width: 100%;
+	height: auto;
+	cursor: crosshair;
+	user-select: none;
+	touch-action: manipulation;
+	aspect-ratio: var(--w) / var(--h);
+}
+
+.regionImage img:focus {
+	outline: none;
+}
+
+.keyboardCursor {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border: 2px solid #4270df;
+	border-radius: 50%;
+	background-color: rgba(255, 255, 255, 0.35);
+	transform: translate(-50%, -50%);
+	box-shadow: 0 0 0 2px white;
+	pointer-events: none;
+}
+
+.regionHint {
+	font-size: 11px;
+	color: #555;
+	max-width: 400px;
+	text-align: center;
+}
+
+@media (pointer: coarse) {
+	.keyboardHint {
+		display: none !important;
+	}
 }
 
 .form {
@@ -183,4 +234,8 @@
 
 .root[data-mode="dark"] .refresh svg path {
 	stroke: #ddd;
+}
+
+.root[data-mode="dark"] .regionHint {
+	color: #bbb;
 }

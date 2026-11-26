@@ -1,0 +1,13 @@
+{% extends "admin/fragments/dashboard-page" %}
+{% block title %}Captchas{% endblock %}
+{% set data = "
+    {
+        \"challenges\": " + challenges + "
+    }
+" %}
+{% set addbtn = "
+    {
+        \"href\": \"/admin/captchas/add\",
+        \"name\": \"Add Captcha\"
+    }
+" %}

@@ -5,6 +5,7 @@ import css from './Form.module.css'
 interface FormProps {
 	method?: string
 	action?: string
+	enctype?: string
 	noCsrf?: boolean
 	setHasErrors?: Function
 	children?: ReactElement | ReactElement[]
@@ -82,6 +83,7 @@ export function FormInput({
 export default function Form({
 	method = "POST",
 	action,
+	enctype,
 	noCsrf = false,
 	setHasErrors = () => {},
 	children
@@ -109,7 +111,7 @@ export default function Form({
 	}
 
 	return (
-		<form method={method} action={action}>
+		<form method={method} action={action} encType={enctype}>
 			{!noCsrf &&
 				<FormInput hidden={true}>
 					<input type="text" name="csrf" value={csrfToken} data-csrf={csrfToken}></input>

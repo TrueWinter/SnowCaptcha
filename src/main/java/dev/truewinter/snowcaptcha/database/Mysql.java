@@ -13,6 +13,7 @@ public class Mysql {
     private final HikariDataSource ds;
     private final MysqlAccountDatabase mysqlAccountDatabase;
     private final MysqlWidgetDatabase mysqlWidgetDatabase;
+    private final MysqlRegionChallengeDatabase mysqlRegionChallengeDatabase;
 
     public Mysql(MysqlConfig mysqlConfig) {
         HikariConfig hikariConfig = new HikariConfig();
@@ -48,12 +49,14 @@ public class Mysql {
 
         this.mysqlAccountDatabase = new MysqlAccountDatabase(ds);
         this.mysqlWidgetDatabase = new MysqlWidgetDatabase(ds);
+        this.mysqlRegionChallengeDatabase = new MysqlRegionChallengeDatabase(ds);
 
         try {
             runSql("SET DEFAULT_STORAGE_ENGINE = INNODB;");
             runSql("SET FOREIGN_KEY_CHECKS = 1;");
             createTablesIfNotExists(mysqlAccountDatabase);
             createTablesIfNotExists(mysqlWidgetDatabase);
+            createTablesIfNotExists(mysqlRegionChallengeDatabase);
         } catch (SQLException e) {
             SnowCaptcha.getLogger().error("Failed to create tables", e);
         }
@@ -65,6 +68,10 @@ public class Mysql {
 
     public MysqlWidgetDatabase getMysqlWidgetDatabase() {
         return mysqlWidgetDatabase;
+    }
+
+    public MysqlRegionChallengeDatabase getMysqlRegionChallengeDatabase() {
+        return mysqlRegionChallengeDatabase;
     }
 
     public void close() {
